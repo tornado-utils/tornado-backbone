@@ -24,6 +24,7 @@ class ApiManager(object):
                              model,
                              url_prefix='/api/js',
                              collection_name=None,
+                             blueprint_prefix='js',
                              handler_class: BaseHandler=BaseHandler) -> URLSpec:
         """
 
@@ -31,6 +32,7 @@ class ApiManager(object):
         :param model:
         :param url_prefix:
         :param collection_name:
+        :param blueprint_prefix: The Prefix that will be used to unique collection_name for named_handlers
         :param handler_class: The Handler Class that will be registered, for customisation extend BaseHandler
         :return: tornado route
         :raise: IllegalArgumentError
@@ -39,7 +41,11 @@ class ApiManager(object):
 
         kwargs = {'model': model}
 
-        blueprint = URLSpec("%s/%s" % (url_prefix, table_name), handler_class, kwargs, table_name)
+        blueprint = URLSpec(
+            "%s/%s" % (url_prefix, table_name),
+            handler_class,
+            kwargs,
+            '%s_%s' % (blueprint_prefix, table_name))
         return blueprint
 
     def create_api(self,
