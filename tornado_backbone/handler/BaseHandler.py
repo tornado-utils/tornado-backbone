@@ -72,7 +72,7 @@ class BaseHandler(RequestHandler):
         kwargs['columns'] = self.model.columns
 
         self.set_header("Content-Type", "application/javascript; charset=UTF-8")
-        self.render('collection.tpl', **kwargs)
+        self.render('collection.tpl.js', **kwargs)
 
 
 

@@ -15,7 +15,7 @@ setup(
     author_email='martin@martimeo.de',
     packages=['tornado_backbone'],
     license='LICENSE.txt',
-    description='backbone models from sqlalchemy orm',
+    description='backbone models from sqlalchemy orm for tornado-restless',
     long_description=open('README.md').read(),
     install_requires=open('requirements.txt').readlines()
 )
