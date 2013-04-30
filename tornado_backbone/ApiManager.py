@@ -23,6 +23,7 @@ class ApiManager(object):
     def create_api_blueprint(self,
                              model,
                              url_prefix='/api/js',
+                             api_url='/api',
                              collection_name=None,
                              blueprint_prefix='js',
                              handler_class: BaseHandler=BaseHandler) -> URLSpec:
@@ -31,6 +32,7 @@ class ApiManager(object):
 
         :param model:
         :param url_prefix:
+        :param api_url: Url of the Restless Api
         :param collection_name:
         :param blueprint_prefix: The Prefix that will be used to unique collection_name for named_handlers
         :param handler_class: The Handler Class that will be registered, for customisation extend BaseHandler
@@ -39,7 +41,9 @@ class ApiManager(object):
         """
         table_name = collection_name if collection_name is not None else model.__tablename__
 
-        kwargs = {'model': model}
+        kwargs = {'model': model,
+                  'api_url': api_url,
+                  'table_name': table_name}
 
         blueprint = URLSpec(
             "%s/%s" % (url_prefix, table_name),
