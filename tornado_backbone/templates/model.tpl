@@ -14,7 +14,9 @@ defaults: {
 "{{ column.name }}":  "{{ column.default }}",
 {% end %}
 {% end %}
-}
+},
+
+urlRoot: '{{ api_url }}/{{ collection_name }}',
 
 idAttribute: "{{ primary_key_name }}"
 
