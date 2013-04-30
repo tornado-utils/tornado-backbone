@@ -11,3 +11,5 @@ var {{ model_name }}Collection = Backbone.Collection.extend({
 model : {{ model_name }},
 url: '{{ api_url }}/{{ collection_name }}'
 });
+
+{{ collection_name }} = new {{ model_name }}Collection;
