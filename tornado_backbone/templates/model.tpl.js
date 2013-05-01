@@ -18,6 +18,15 @@ var {{ model_name }} = Backbone.Model.extend({
 
     urlRoot: '{{ api_url }}/{{ collection_name }}',
 
-    idAttribute: "{{ primary_key_name }}"
+    idAttribute: "{{ primary_key_name }}",
+
+    sync: function (method, model, options) {
+        options = options || {};
+
+        options.headers = options.headers || {};
+        options.headers['X-XSRFToken'] = '{{ handler.xsrf_token }}';
+
+        return Backbone.sync(method, model, options);
+    }
 
 });

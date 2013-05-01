@@ -25,7 +25,7 @@ class ApiManager(object):
                              url_prefix='/api/js',
                              api_url='/api',
                              collection_name=None,
-                             blueprint_prefix='js',
+                             blueprint_prefix='js/',
                              handler_class: BaseHandler=BaseHandler) -> URLSpec:
         """
 
@@ -49,7 +49,7 @@ class ApiManager(object):
             "%s/%s" % (url_prefix, table_name),
             handler_class,
             kwargs,
-            '%s_%s' % (blueprint_prefix, table_name))
+            '%s%s' % (blueprint_prefix, table_name))
         return blueprint
 
     def create_api(self,
