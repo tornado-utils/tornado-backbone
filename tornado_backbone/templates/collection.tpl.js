@@ -27,6 +27,7 @@ var {{ model_name }}Collection = Backbone.Collection.extend({
             this._loadedPages.push(response.page);
         }
         this._numPages = response.num_pages;
+        this._numResults = response.num_results;
 
         return response.objects;
     },
