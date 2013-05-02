@@ -62,8 +62,6 @@ class BaseHandler(RequestHandler):
 
         # Primary Key Name
         kwargs['primary_key_names'] = [p.key for p in self.model.primary_keys]
-        kwargs['primary_key_name'] = kwargs['primary_key_names'][0] \
-            if len(kwargs['primary_key_names']) == 1 else tuple(kwargs['primary_key_names'])
 
         # Columns
         kwargs['relations'] = self.model.relations

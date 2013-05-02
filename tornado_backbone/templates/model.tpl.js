@@ -18,7 +18,11 @@ var {{ model_name }} = Backbone.Model.extend({
 
     urlRoot: '{{ api_url }}/{{ collection_name }}',
 
-    idAttribute: "{{ primary_key_name }}",
+    {% if len(primary_key_names) == 1 %}
+    idAttribute: "{{ primary_key_names[0] }}",
+    {% else %}
+    idAttributes: new Array('{{ "','".join(primary_key_names) }}'),
+    {% end %}
 
     sync: function (method, model, options) {
         options = options || {};
