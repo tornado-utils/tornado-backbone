@@ -15,4 +15,15 @@ Copyright license
 
 tornado-backbone is licensed under the GNU Affero General Public License, for more information see the LICENSE.txt.
 
+Installing
+==========
+
+tornado-backbone was developed under python3.3, sqlalchemy0.8 and tornado3.0
+
+It may work with previous python3.X versions and sqlalchemy 2.7 (and maybe even with python2.7) but I did not test it at all.
+
+To install this libary as an egg use:
+
+    python setup.py install
+
 
