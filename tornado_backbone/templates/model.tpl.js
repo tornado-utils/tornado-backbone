@@ -24,6 +24,14 @@ var {{ model_name }} = Backbone.Model.extend({
     idAttributes: new Array('{{ "','".join(primary_key_names) }}'),
     {% end %}
 
+    /**
+     * Override sync method to pass xsrf token with call
+     *
+     * @param method
+     * @param model
+     * @param options
+     * @returns {*}
+     */
     sync: function (method, model, options) {
         options = options || {};
 
