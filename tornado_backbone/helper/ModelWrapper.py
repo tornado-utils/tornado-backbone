@@ -24,6 +24,10 @@ class ModelWrapper(object):
     def __init__(self, model):
         self.model = model
 
+    @property
+    def __name__(self):
+        return self.model.__name__
+
     def primary_key_names(self):
         """
             Returns the names of all primary keys

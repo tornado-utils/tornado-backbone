@@ -57,7 +57,7 @@ class BaseHandler(RequestHandler):
         kwargs['model'] = self.model
 
         # Name of the Collection
-        kwargs['model_name'] = self.table_name.capitalize()
+        kwargs['model_name'] = self.model.__name__
         kwargs['collection_name'] = self.table_name
 
         # Primary Key Name
