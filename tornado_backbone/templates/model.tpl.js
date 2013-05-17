@@ -8,13 +8,7 @@
 
 var {{ model_name }} = Backbone.Model.extend({
 
-    defaults: {
-        {% for column in columns %}
-        {% if column.default %}
-        "{{ column.name }}": "{{ column.default }}",
-        {% end %}
-        {% end %}
-    },
+    defaults: { {% for column in columns %}{% if column.default %}"{{ column.name }}": "{{ column.default }}", {% end %}{% end %} },
 
     urlRoot: '{{ api_url }}/{{ collection_name }}',
 
@@ -23,6 +17,12 @@ var {{ model_name }} = Backbone.Model.extend({
     {% else %}
     idAttributes: new Array('{{ "','".join(primary_key_names) }}'),
     {% end %}
+
+    /**
+     * Columns of this model (to be shown f.e. in table view)
+     *
+     */
+    columns: new Array('{{ "','".join([c.key for c in columns]) }}'),
 
     /**
      * Override sync method to pass xsrf token with call
