@@ -1,7 +1,5 @@
 {% include "model.tpl.js" %}
 
-{% include "row-view.tpl.js" %}
-
 /**
  * File: collection.tpl
  * User: Martin Martimeo
