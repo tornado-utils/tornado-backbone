@@ -23,6 +23,7 @@ var {{ model_name }} = Backbone.Model.extend({
      *
      */
     columns: new Array('{{ "','".join([c.key for c in columns]) }}'),
+    readonly: new Array('{{ "','".join([c.key for c in columns if ('readonly' in c.info and c.info['readonly']) or c.server_onupdate]) }}'),
 
     /**
      * Override sync method to pass xsrf token with call
