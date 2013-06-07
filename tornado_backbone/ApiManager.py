@@ -22,13 +22,15 @@ class ApiManager(object):
 
     def create_api_blueprint(self,
                              model,
-                             url_prefix='/api/js',
-                             api_url='/api',
-                             collection_name=None,
-                             blueprint_prefix='js/',
+                             url_prefix: str='/api/js',
+                             api_url: str='/api',
+                             collection_name: str=None,
+                             blueprint_prefix: str='js/',
                              handler_class: BaseHandler=BaseHandler) -> URLSpec:
         """
+        Register the model under collection_name or __tablename__
 
+        Make sure to register all relationships of this model aswell if you want to access them in your backbone
 
         :param model:
         :param url_prefix:
@@ -39,17 +41,19 @@ class ApiManager(object):
         :return: tornado route
         :raise: IllegalArgumentError
         """
-        table_name = collection_name if collection_name is not None else model.__tablename__
+        model.__collectionname__ = collection_name if collection_name is not None else model.__tablename__
+        model.__table__.__collectionname__ = model.__collectionname__
 
         kwargs = {'model': model,
                   'api_url': api_url,
-                  'table_name': table_name}
+                  'own_url': url_prefix,
+                  'table_name': model.__collectionname__}
 
         blueprint = URLSpec(
-            "%s/%s" % (url_prefix, table_name),
+            "%s/%s" % (url_prefix, model.__collectionname__),
             handler_class,
             kwargs,
-            '%s%s' % (blueprint_prefix, table_name))
+            '%s%s' % (blueprint_prefix, model.__collectionname__))
         return blueprint
 
     def create_api(self,

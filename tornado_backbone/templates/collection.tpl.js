@@ -7,9 +7,9 @@
  * Time: 19:18
  */
 
-var {{ model_name }}Collection = Backbone.Collection.extend({
+var {{ collection_name }}Collection = Backbone.Collection.extend({
 
-    model: {{ model_name }},
+    model: {{ collection_name }}Model,
 
     url: '{{ api_url }}/{{ collection_name }}',
 
@@ -47,4 +47,4 @@ var {{ model_name }}Collection = Backbone.Collection.extend({
 
 });
 
-{{ collection_name }} = new {{ model_name }}Collection;
+{{ collection_name }} = new {{ collection_name }}Collection;

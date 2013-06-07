@@ -19,12 +19,14 @@ class BaseHandler(RequestHandler):
     # noinspection PyMethodOverriding
     def initialize(self,
                    model,
-                   api_url,
-                   table_name):
+                   api_url: str,
+                   own_url: str,
+                   table_name: str):
         """
 
         :param model: The Model for which this handler has been created
         :param api_url: Location of the restless Api
+        :param own_url: Location of ourself
         :param table_name: How we named the collection
         """
         super().initialize()
@@ -33,6 +35,7 @@ class BaseHandler(RequestHandler):
         self.table_name = table_name
 
         self.api_url = api_url
+        self.own_url = own_url
 
         # Template Path
         self.template_path = os.path.join(os.path.dirname(__file__), "..", "templates")
@@ -52,19 +55,35 @@ class BaseHandler(RequestHandler):
 
         # Settings
         kwargs['api_url'] = self.api_url
+        kwargs['own_url'] = self.own_url
 
         # Model
         kwargs['model'] = self.model
 
         # Name of the Collection
         kwargs['model_name'] = self.model.__name__
-        kwargs['collection_name'] = self.table_name
+        kwargs['table_name'] = self.model.__tablename__
+        kwargs['collection_name'] = self.model.__collectionname__
 
-        # Primary Key Name
-        kwargs['primary_key_names'] = [p.key for p in self.model.primary_keys]
+        # Primary Key Names
+        kwargs['primary_keys'] = self.model.primary_keys
 
-        # Columns
+        # Foreign Key Names
+        kwargs['foreign_keys'] = self.model.foreign_keys
+        kwargs['foreign_collections'] = {}
+        for key, column in kwargs['foreign_keys'].items():
+            if len(column.foreign_keys) > 1:
+                raise Exception("Can't handle multiple foreign key columns")
+            foreign_key = list(column.foreign_keys)[0]
+            kwargs['foreign_collections'][key] = foreign_key.column.table.__collectionname__
+
+        # Relation Key Names
+        kwargs['relation_key_names'] = [p.key for p in self.model.relations]
+
+        # Relations
         kwargs['relations'] = self.model.relations
+        kwargs['relation_columns'] = {relation.key: [c.key for c in relation.property.local_columns]
+                                      for relation in kwargs['relations']}
 
         # Columns
         kwargs['columns'] = self.model.columns
