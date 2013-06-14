@@ -24,9 +24,19 @@ var {{ collection_name }}Model = Backbone.Model.extend({
     columnAttributes: new Array('{{ "','".join([c.key for c in columns]) }}'),
 
     /**
+     * Columns that are considered to be integer
+     */
+    integerAttributes: new Array('{{ "','".join([c.key for c in integer_columns]) }}'),
+
+    /**
+     * Columns that are considered to be floats or similiar
+     */
+    numericAttributes: new Array('{{ "','".join([c.key for c in numeric_columns]) }}'),
+
+    /**
      * Columns that are marked as readonly
      */
-    readonlyAttributes: new Array('{{ "','".join([c.key for c in columns if ('readonly' in c.info and c.info['readonly']) or c.server_onupdate]) }}'),
+    readonlyAttributes: new Array('{{ "','".join([c.key for c in readonly_columns]) }}'),
 
     /**
      * Columns that are foreign keys

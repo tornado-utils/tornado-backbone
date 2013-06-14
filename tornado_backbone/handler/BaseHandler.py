@@ -3,6 +3,7 @@
 """
 
 """
+from sqlalchemy import Integer, Numeric
 from tornado.web import RequestHandler, os
 
 from ..helper.ModelWrapper import ModelWrapper
@@ -87,6 +88,15 @@ class BaseHandler(RequestHandler):
 
         # Columns
         kwargs['columns'] = self.model.columns
+
+        # Readonly Columns
+        kwargs['readonly_columns'] = [c for c in kwargs['columns'] if 'readonly' in c.info and c.info['readonly']]
+
+        # Integer Columns
+        kwargs['integer_columns'] = [c for c in kwargs['columns'] if isinstance(c.type, Integer)]
+
+        # Numeric Columns
+        kwargs['numeric_columns'] = [c for c in kwargs['columns'] if isinstance(c.type, Numeric)]
 
         self.set_header("Content-Type", "application/javascript; charset=UTF-8")
         self.render('collection.tpl.js', **kwargs)
