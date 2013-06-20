@@ -10,6 +10,7 @@
 var {{ collection_name }}Collection = Backbone.Collection.extend({
 
     model: {{ collection_name }}Model,
+    name: '{{ collection_name }}',
 
     url: '{{ api_url }}/{{ collection_name }}',
 
