@@ -39,12 +39,6 @@ var {{ collection_name }}Model = Backbone.Model.extend({
     readonlyAttributes: new Array('{{ "','".join([c.key for c in readonly_columns]) }}'),
 
     /**
-     * Columns that are foreign keys
-     */
-    foreignAttributes: new Array('{{ "','".join(foreign_keys.keys()) }}'),
-    foreignCollections: {},
-
-    /**
      * Columns that are relations
      */
     relationAttributes: new Array('{{ "','".join(relation_key_names) }}'),
@@ -55,26 +49,11 @@ var {{ collection_name }}Model = Backbone.Model.extend({
      */
     initialize: function () {
         this.deferred = new jQuery.Deferred();
-
-        var dfd_count = {{ len(foreign_collections) }};
-
-        {% for key, c in foreign_collections.items() %}
-        var model = this;
-        require(["{{ own_url }}/{{ c }}"], function () {
-            dfd_count--;
-            model.deferred.notify("{{ own_url }}/{{ c }}");
-
-            model.foreignCollections['{{ key }}'] = {{ c }};
-
-            if (dfd_count == 0) {
-                model.deferred.resolve();
-            }
+        var dfd = this.deferred;
+        this.collection.deferred.done(function () {
+            dfd.resolve();
         });
-        {% end %}
 
-        if (dfd_count == 0) {
-            this.deferred.resolve();
-        }
     },
 
     /**
@@ -87,8 +66,8 @@ var {{ collection_name }}Model = Backbone.Model.extend({
 
         var value = this.attributes[attribute];
 
-        if (this.foreignAttributes.indexOf(attribute) !== -1) {
-            return this.foreignCollections[attribute].get(value);
+        if (this.collection.foreignAttributes.indexOf(attribute) !== -1) {
+            return this.collection.foreignCollections[attribute].get(value);
         }
 
         return value;

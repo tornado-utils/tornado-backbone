@@ -14,6 +14,12 @@ var {{ collection_name }}Collection = Backbone.Collection.extend({
 
     url: '{{ api_url }}/{{ collection_name }}',
 
+    /**
+     * Columns that are foreign keys
+     */
+    foreignAttributes: new Array('{{ "','".join(foreign_keys.keys()) }}'),
+    foreignCollections: {},
+
     _numPages: undefined,
     _loadedPages: [],
     // Did we load already all pages?
@@ -58,8 +64,35 @@ var {{ collection_name }}Collection = Backbone.Collection.extend({
             return true;
         }
         return false;
-    }
+    },
 
+    /**
+     * Load all required foreign collections
+     *
+     */
+    initialize: function () {
+        this.deferred = new jQuery.Deferred();
+
+        var dfd_count = {{ len(foreign_collections) }};
+
+        {% for key, c in foreign_collections.items() %}
+        var collection = this;
+        require(["{{ own_url }}/{{ c }}"], function () {
+            dfd_count--;
+            collection.deferred.notify("{{ own_url }}/{{ c }}");
+
+            collection.foreignCollections['{{ key }}'] = {{ c }};
+
+            if (dfd_count == 0) {
+                collection.deferred.resolve();
+            }
+        });
+        {% end %}
+
+        if (dfd_count == 0) {
+            this.deferred.resolve();
+        }
+    }
 });
 
 {{ collection_name }} = new {{ collection_name }}Collection;
