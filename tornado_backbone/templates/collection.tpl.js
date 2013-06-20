@@ -18,17 +18,24 @@ var {{ collection_name }}Collection = Backbone.Collection.extend({
     _loadedPages: [],
     // Did we load already all pages?
     isFullyLoaded: function () {
-        return (this._numPages != undefined) && (this._loadedPages == this._numPages);
+        return (this._numPages != undefined) && (this._loadedPages.length == this._numPages);
     },
 
     // parse data from server
     // This is specific overwritten to work with flask-restless / tornado-restless
     parse: function (response) {
+        response.page = parseInt(response.page);
         if (this._loadedPages.indexOf(response.page) == -1) {
             this._loadedPages.push(response.page);
         }
         this._numPages = response.num_pages;
         this._numResults = response.num_results;
+
+        if (this.isFullyLoaded()) {
+            this.trigger("pagination:complete");
+        } else {
+            this.trigger("pagination:load");
+        }
 
         return response.objects;
     },
@@ -36,10 +43,17 @@ var {{ collection_name }}Collection = Backbone.Collection.extend({
     // fetches more results to collection
     fetchMore: function () {
         if (!this.isFullyLoaded()) {
-            if (this._loadedPages.indexOf('1') == -1) {
+            if (this._loadedPages.indexOf(1) == -1) {
                 this.fetch();
             } else {
-                this.fetch({page: this._loadedPages.length});
+                var page = 1;
+                while (this._loadedPages.indexOf(page) >= 0) {
+                    page += 1;
+                }
+                if (page > this._numPages) {
+                    return false;
+                }
+                this.fetch({data: {page: page}});
             }
             return true;
         }
