@@ -57,6 +57,9 @@ class ModelWrapper(object):
 
     @property
     def primary_keys(self):
+        """
+        @see get_primary_keys
+        """
         return self.get_primary_keys(self.model)
 
     @staticmethod
@@ -75,6 +78,9 @@ class ModelWrapper(object):
 
     @property
     def foreign_keys(self):
+        """
+        @see get_foreign_keys
+        """
         return self.get_foreign_keys(self.model)
 
     @staticmethod
@@ -94,6 +100,9 @@ class ModelWrapper(object):
 
     @property
     def columns(self):
+        """
+        @see get_columns
+        """
         return self.get_columns(self.model)
 
     @staticmethod
@@ -113,8 +122,10 @@ class ModelWrapper(object):
 
     @property
     def relations(self):
-        rtn = self.get_relations(self.model)
-        return rtn
+        """
+        @see get_relations
+        """
+        return self.get_relations(self.model)
 
     @staticmethod
     def get_hybrids(instance) -> list:
@@ -123,16 +134,19 @@ class ModelWrapper(object):
 
             :param instance: Model ORM Instance
         """
+        Proxy = namedtuple('Proxy', ['key', 'field'])
         if hasattr(instance, 'iterate_properties'):
-            Proxy = namedtuple('Proxy', ['key', 'field'])
             return [Proxy(key, field) for key, field in sqinspect(instance).all_orm_descriptors.items()
                     if isinstance(field, hybrid_property)]
         else:
-            return [field for key, field in inspect.getmembers(instance)
+            return [Proxy(key, field) for key, field in inspect.getmembers(instance)
                     if isinstance(field, hybrid_property)]
 
     @property
     def hybrids(self):
+        """
+        @see get_hybrids
+        """
         return self.get_hybrids(self.model)
 
     @staticmethod
@@ -144,15 +158,18 @@ class ModelWrapper(object):
 
             :param instance: Model ORM Instance
         """
+        Proxy = namedtuple('Proxy', ['key', 'field'])
         if hasattr(instance, 'iterate_properties'):
-            Proxy = namedtuple('Proxy', ['key', 'field'])
             return [Proxy(key, field) for key, field in sqinspect(instance).all_orm_descriptors.items()
                     if isinstance(field, AssociationProxy)]
         else:
-            return [field for key, field in inspect.getmembers(instance)
+            return [Proxy(key, field) for key, field in inspect.getmembers(instance)
                     if isinstance(field, AssociationProxy)]
 
     @property
     def proxies(self):
+        """
+        @see get_proxies
+        """
         return self.get_proxies(self.model)
 
