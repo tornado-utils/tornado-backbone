@@ -20,11 +20,14 @@ var {{ collection_name }}Collection = Backbone.Collection.extend({
     foreignAttributes: new Array('{{ "','".join(foreign_keys.keys()) }}'),
     foreignCollections: {},
 
+    // Information about pagination
+    _numResults: undefined,
     _numPages: undefined,
     _loadedPages: [],
+
     // Did we load already all pages?
     isFullyLoaded: function () {
-        return (this._numPages != undefined) && (this._loadedPages.length == this._numPages);
+        return (this._numResults != undefined) && (this._numResults == this.models.length);
     },
 
     // parse data from server
