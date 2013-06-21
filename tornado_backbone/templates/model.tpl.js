@@ -50,27 +50,13 @@ var {{ collection_name }}Model = Backbone.Model.extend({
     initialize: function () {
         this.deferred = new jQuery.Deferred();
         var dfd = this.deferred;
-        this.collection.deferred.done(function () {
+        if (this.hasOwnProperty("collection")) {
+            this.collection.deferred.done(function () {
+                dfd.resolve();
+            });
+        } else {
             dfd.resolve();
-        });
-
-    },
-
-    /**
-     * Override get method to get model objects on foreign keys
-     *
-     * @param attribute
-     * @returns {*}
-     */
-    get: function (attribute) {
-
-        var value = this.attributes[attribute];
-
-        if (this.collection.foreignAttributes.indexOf(attribute) !== -1) {
-            return this.collection.foreignCollections[attribute].get(value);
         }
-
-        return value;
     },
 
     /**
