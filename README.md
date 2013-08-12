@@ -7,8 +7,14 @@ Backbone allows to represent your data as models in JavaScript.
 However you may not want to do your modeling twice in sqlalchemy aswell in backbone.
 Tornado-Backbone approaches to generate the JavaScript models from your sqlalchemy orm.
 
-It's may intention is to work with tornado-restless (and is compatible with flask-restless as api backend),
+It's main intention is to work with tornado-restless (and is compatible with flask-restless as api backend),
 so there are some specific 'hacks' for them.
+
+Development Status
+==================
+
+The implementation is currently still a bleeding edge without a documentation,
+but I hope to provide a meaningful documentation and release soon.
 
 Copyright license
 =================
