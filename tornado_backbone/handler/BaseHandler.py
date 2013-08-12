@@ -4,7 +4,8 @@
 
 """
 from sqlalchemy import Integer, Numeric
-from tornado.web import RequestHandler, os
+from tornado.escape import json_decode
+from tornado.web import RequestHandler
 
 from ..helper.ModelWrapper import ModelWrapper
 
@@ -38,68 +39,57 @@ class BaseHandler(RequestHandler):
         self.api_url = api_url
         self.own_url = own_url
 
-        # Template Path
-        self.template_path = os.path.join(os.path.dirname(__file__), "..", "templates")
-
-    def get_template_path(self):
-        """
-            Overwritten template path for not using the application setting
-        """
-        return self.template_path
-
     def get(self):
         """
             GET request
         """
 
-        kwargs = {}
+        # Args to build model
+        mwargs = {'urlRoot': self.api_url + "/" + self.model.__collectionname__}
 
-        # Settings
-        kwargs['api_url'] = self.api_url
-        kwargs['own_url'] = self.own_url
+        # Args to build collection
+        cwargs = {'url': self.api_url + "/" + self.model.__collectionname__,
+                  'model': "%sModel" % self.model.__collectionname__,
+                  'name': self.model.__collectionname__}
 
-        # Model
-        kwargs['model'] = self.model
+        # Primary Keys
+        l_primary_keys = list(self.model.primary_keys)
+        if l_primary_keys == 1:
+            mwargs["idAttribute"] = l_primary_keys[0]
+        else:
+            mwargs["idAttributes"] = l_primary_keys
 
-        # Name of the Collection
-        kwargs['model_name'] = self.model.__name__
-        kwargs['table_name'] = self.model.__tablename__
-        kwargs['collection_name'] = self.model.__collectionname__
-
-        # Primary Key Names
-        kwargs['primary_keys'] = self.model.primary_keys
-
-        # Foreign Key Names
-        kwargs['foreign_keys'] = self.model.foreign_keys
-        kwargs['foreign_collections'] = {}
-        for key, column in kwargs['foreign_keys'].items():
+        # Foreign Keys
+        cwargs['foreignAttributes'] = []
+        cwargs['foreignCollections'] = {}
+        cwargs['foreignRequirements'] = set()
+        for key, column in self.model.foreign_keys.items():
             if len(column.foreign_keys) > 1:
                 raise Exception("Can't handle multiple foreign key columns")
-            foreign_key = list(column.foreign_keys)[0]
-            kwargs['foreign_collections'][key] = foreign_key.column.table.__collectionname__
-
-        # Relation Key Names
-        kwargs['relation_key_names'] = [p.key for p in self.model.relations]
-
-        # Relations
-        kwargs['relations'] = self.model.relations
-        kwargs['relation_columns'] = {relation.key: [c.key for c in relation.property.local_columns]
-                                      for relation in kwargs['relations']}
+            cwargs['foreignCollections'][key] = list(column.foreign_keys)[0].column.table.__collectionname__
+            cwargs['foreignAttributes'].append(key)
+            cwargs['foreignRequirements'].add(self.own_url + "/" + cwargs['foreignCollections'][key])
 
         # Columns
-        kwargs['columns'] = self.model.columns
+        for column in self.model.columns:
+            mwargs.setdefault("columnAttributes", []).append(column.key)
+            if column.default:
+                mwargs.setdefault("defaults", {})[column.key] = column.default
+            if isinstance(column.type, Integer):
+                mwargs.setdefault("integerAttributes", []).append(column.key)
+            if isinstance(column.type, Numeric):
+                mwargs.setdefault("numericAttributes", []).append(column.key)
+            if 'readonly' in column.info and column.info['readonly']:
+                mwargs.setdefault("readonlyAttributes", []).append(column.key)
 
-        # Readonly Columns
-        kwargs['readonly_columns'] = [c for c in kwargs['columns'] if 'readonly' in c.info and c.info['readonly']]
-
-        # Integer Columns
-        kwargs['integer_columns'] = [c for c in kwargs['columns'] if isinstance(c.type, Integer)]
-
-        # Numeric Columns
-        kwargs['numeric_columns'] = [c for c in kwargs['columns'] if isinstance(c.type, Numeric)]
+        # Relations
+        for relation in self.model.relations:
+            mwargs.setdefault("relationAttributes", []).append(relation.key)
 
         self.set_header("Content-Type", "application/javascript; charset=UTF-8")
-        self.render('collection.tpl.js', **kwargs)
+        self.write('var %s = Tornado.Model.extend(%s);' % (cwargs["model"], json_decode(mwargs)))
+        self.write('var %sCollection = Tornado.Collection.extend(%s);' % (cwargs["name"], json_decode(cwargs)))
+        self.write('%s = new %sCollection;' % (self.table_name, cwargs["name"]))
 
 
 
