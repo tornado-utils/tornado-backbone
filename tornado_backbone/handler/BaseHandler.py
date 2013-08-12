@@ -5,7 +5,7 @@
 """
 import hashlib
 from sqlalchemy import Integer, Numeric
-from tornado.escape import json_decode
+from tornado.escape import json_encode
 from tornado.web import RequestHandler
 
 from ..helper.ModelWrapper import ModelWrapper
@@ -42,9 +42,9 @@ class BaseHandler(RequestHandler):
         self.own_url = own_url
 
         self.hash = hashlib.md5()
-        self.hash.update(self.api_url)
-        self.hash.update(self.own_url)
-        self.hash.update(pepper)
+        self.hash.update(self.api_url.encode("utf-8"))
+        self.hash.update(self.own_url.encode("utf-8"))
+        self.hash.update(("%u" % pepper).encode("utf-8"))
 
     def compute_etag(self):
         """
@@ -52,7 +52,7 @@ class BaseHandler(RequestHandler):
 
             :return:
         """
-        return self.hash
+        return self.hash.hexdigest()
 
     def get(self):
         """
@@ -66,7 +66,8 @@ class BaseHandler(RequestHandler):
             return
 
         # Args to build model
-        mwargs = {'urlRoot': self.api_url + "/" + self.model.__collectionname__}
+        mwargs = {'urlRoot': self.api_url + "/" + self.model.__collectionname__,
+                  'schema': {}}
 
         # Args to build collection
         cwargs = {'url': self.api_url + "/" + self.model.__collectionname__,
@@ -90,12 +91,16 @@ class BaseHandler(RequestHandler):
             cwargs['foreignCollections'][key] = list(column.foreign_keys)[0].column.table.__collectionname__
             cwargs['foreignAttributes'].append(key)
             cwargs['foreignRequirements'].add(self.own_url + "/" + cwargs['foreignCollections'][key])
+        cwargs['foreignRequirements'] = list(cwargs['foreignRequirements'])
 
         # Columns
         for column in self.model.columns:
             mwargs.setdefault("columnAttributes", []).append(column.key)
+            mwargs['schema'][column.key] = {}
+            mwargs['schema'][column.key].update(column.property.info)
+            mwargs['schema'][column.key].update(column.info)
             if column.default:
-                mwargs.setdefault("defaults", {})[column.key] = column.default
+                mwargs.setdefault("defaults", {})[column.key] = "%s" % column.default.arg
             if isinstance(column.type, Integer):
                 mwargs.setdefault("integerAttributes", []).append(column.key)
             if isinstance(column.type, Numeric):
@@ -108,8 +113,8 @@ class BaseHandler(RequestHandler):
             mwargs.setdefault("relationAttributes", []).append(relation.key)
 
         self.set_header("Content-Type", "application/javascript; charset=UTF-8")
-        self.write('var %s = Tornado.Model.extend(%s);' % (cwargs["model"], json_decode(mwargs)))
-        self.write('var %sCollection = Tornado.Collection.extend(%s);' % (cwargs["name"], json_decode(cwargs)))
+        self.write('var %s = Tornado.Model.extend(%s);' % (cwargs["model"], json_encode(mwargs)))
+        self.write('var %sCollection = Tornado.Collection.extend(%s);' % (cwargs["name"], json_encode(cwargs)))
         self.write('%s = new %sCollection;' % (self.table_name, cwargs["name"]))
 
 

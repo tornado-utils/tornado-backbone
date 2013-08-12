@@ -42,6 +42,11 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
     Tornado.Model = Backbone.Model.extend({
 
         /**
+         * Schema for use with backbone-forms
+         */
+        schema: {},
+
+        /**
          * List of default values
          */
         defaults: {},

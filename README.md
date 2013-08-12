@@ -16,6 +16,25 @@ Development Status
 The implementation is currently still a bleeding edge without a documentation,
 but I hope to provide a meaningful documentation and release soon.
 
+backbone-forms
+==============
+
+The Tornado.Model exposes all information of the `info` dict as schema attribute in the backbone model.
+So for interaction with backbone-forms you can define for example your column like:
+
+    class User(Base):
+        email = Column(String, info={'type': 'Text', 'dataType': 'email', 'validators': ['email']})
+
+And then create a form like:
+
+    require('/api/js/user');
+    var user = new UserModel();
+
+    var form = new Backbone.Form({
+        model: user
+    }).render();
+    $('body').append(form.el);
+
 Copyright license
 =================
 
