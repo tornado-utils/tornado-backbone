@@ -3,11 +3,13 @@
 """
 
 """
+import hashlib
 from sqlalchemy import Integer, Numeric
 from tornado.escape import json_decode
 from tornado.web import RequestHandler
 
 from ..helper.ModelWrapper import ModelWrapper
+from . import _pepper as pepper
 
 __author__ = 'Martin Martimeo <martin@martimeo.de>'
 __date__ = '26.04.13 - 22:09'
@@ -39,10 +41,29 @@ class BaseHandler(RequestHandler):
         self.api_url = api_url
         self.own_url = own_url
 
+        self.hash = hashlib.md5()
+        self.hash.update(self.api_url)
+        self.hash.update(self.own_url)
+        self.hash.update(pepper)
+
+    def compute_etag(self):
+        """
+            Blueprints are pretty static, so they are aggresivly cached using etag
+
+            :return:
+        """
+        return self.hash
+
     def get(self):
         """
             GET request
         """
+
+        # Code from us is pretty static
+        self.set_etag_header()
+        if self.check_etag_header():
+            self.set_status(304)
+            return
 
         # Args to build model
         mwargs = {'urlRoot': self.api_url + "/" + self.model.__collectionname__}

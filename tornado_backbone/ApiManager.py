@@ -3,8 +3,10 @@
 """
 
 """
+import time
 from tornado.web import Application, URLSpec
 
+from . import handler
 from .handler.BaseHandler import BaseHandler
 
 __author__ = 'Martin Martimeo <martin@martimeo.de>'
@@ -77,3 +79,11 @@ class ApiManager(object):
             self.application.add_handlers(virtualhost, [blueprint])
 
         self.application.named_handlers[blueprint.name] = blueprint
+
+    def invalidate(self):
+        """
+            Tornado Backbone aggresivly set and checks etag based
+
+            use this function to invalidate all existing etags
+        """
+        handler._pepper = time.time()

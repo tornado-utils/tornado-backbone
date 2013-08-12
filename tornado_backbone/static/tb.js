@@ -32,7 +32,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
     /**
      * If set, all sync calls will be enriched with this token
      */
-    var xsrf_token = null;
+    Tornado.xsrf_token = null;
 
     /**
      * Enriched Backbone model with a lot of information about the sqlalchemy model
