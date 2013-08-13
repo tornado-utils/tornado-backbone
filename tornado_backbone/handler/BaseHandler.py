@@ -84,14 +84,13 @@ class BaseHandler(RequestHandler):
         # Foreign Keys
         cwargs['foreignAttributes'] = []
         cwargs['foreignCollections'] = {}
-        cwargs['foreignRequirements'] = set()
+        cwargs['foreignRequirements'] = []
         for key, column in self.model.foreign_keys.items():
             if len(column.foreign_keys) > 1:
                 raise Exception("Can't handle multiple foreign key columns")
             cwargs['foreignCollections'][key] = list(column.foreign_keys)[0].column.table.__collectionname__
             cwargs['foreignAttributes'].append(key)
-            cwargs['foreignRequirements'].add(self.own_url + "/" + cwargs['foreignCollections'][key])
-        cwargs['foreignRequirements'] = list(cwargs['foreignRequirements'])
+            cwargs['foreignRequirements'].append(self.own_url + "/" + cwargs['foreignCollections'][key])
 
         # Columns
         for column in self.model.columns:
