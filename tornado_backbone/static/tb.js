@@ -423,9 +423,52 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             return dfd;
         }
 
+    });
 
+    require(["backbone_forms"], function () {
 
+        Tornado.BackboneForm = function (element, options) {
+            this.$element = $(element);
+            this.options = $.extend({}, Tornado.BackboneForm.DEFAULTS, options);
+            this.$form = new Backbone.Form(this.options);
+        }
+        Tornado.BackboneForm.DEFAULTS = {};
 
+        /**
+         * Allows to facility html elements with backbone-forms or model functionality
+         *
+         * @param option
+         */
+        $.fn.backbone = function (option) {
+            return this.each(function () {
+                var $this = $(this);
+                var data = $this.data('tb.backbone');
+                var options = typeof option == 'object' && option;
+
+                if (!data) {
+                    $this.data('tb.backbone', (data = new Tornado.BackboneForm(this, options)));
+                }
+                if (typeof option == 'string') {
+                    data[option]();
+                }
+            });
+        }
+        $.fn.backbone.Constructor = Tornado.BackboneForm;
+
+        // Facile elements with backbone-forms
+        $(window).on('load', function () {
+            $('[data-model][data-require]').each(function () {
+                var $form = $(this);
+
+                require([$(this).data('require')], function () {
+                    $form.backbone($form.data())
+                });
+            });
+            $('[data-model]:not([data-require])').each(function () {
+                var $form = $(this);
+                $form.backbone($form.data());
+            });
+        });
 
     });
 
