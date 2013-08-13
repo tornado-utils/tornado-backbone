@@ -20,8 +20,8 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
         lt: ["<", "lt"],
         gte: [">=", "ge", "gte", "geq"],
         lte: ["<=", "le", "lte", "leq"],
-        in: ["in"],
-        not_in: ["not_in"],
+        element_of: ["in", "element_of"],
+        not_element_of: ["not_in", "not_element_of"],
         is_null: ["is_null"],
         is_not_null: ["is_not_null"],
         like: ["like"],
@@ -251,9 +251,9 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
                     rtn = value >= other;
                 } else if (filter["op"] in Tornado.Operator.lte) {
                     rtn = value <= other;
-                } else if (filter["op"] in Tornado.Operator.in) {
+                } else if (filter["op"] in Tornado.Operator.element_of) {
                     rtn = value in other;
-                } else if (filter["op"] in Tornado.Operator.not_in) {
+                } else if (filter["op"] in Tornado.Operator.not_element_of) {
                     rtn = !(value in other);
                 } else if (filter["op"] in Tornado.Operator.is_null) {
                     rtn = !value;
@@ -321,7 +321,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
         /**
          * Get the result list for a query
          * @param search
-         * @param offset
+         * @param [offset]
          * @returns {$.Deferred}
          */
         getResults: function (search, offset) {
@@ -430,9 +430,99 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
         Tornado.BackboneForm = function (element, options) {
             this.$element = $(element);
             this.options = $.extend({}, Tornado.BackboneForm.DEFAULTS, options);
-            this.$form = new Backbone.Form(this.options);
-        }
+
+            if (this.options.model) {
+                if (typeof this.options.model == "string") {
+                    this.model = this.options.model = new window[this.options.model]();
+                } else {
+                    this.model = this.options.model;
+                }
+            }
+
+            this.form = new Backbone.Form(this.options);
+        };
         Tornado.BackboneForm.DEFAULTS = {};
+
+        /**
+         * (re)render the form
+         *
+         * Based on backbone-forms.js/render by Charles Davison
+         */
+        Tornado.BackboneForm.prototype.render = function () {
+            var self = this.form,
+                $form = this.$element,
+                fields = this.form.fields;
+
+            console.log(self);
+
+            //Render standalone editors
+            $form.find('[data-editors]').add($form).each(function (i, el) {
+                var $container = $(el),
+                    selection = $container.attr('data-editors');
+
+                if (_.isUndefined(selection)) {
+                    return;
+                }
+
+                //Work out which fields to include
+                var keys = (selection == '*')
+                    ? self.selectedFields || _.keys(fields)
+                    : selection.split(',');
+
+                //Add them
+                _.each(keys, function (key) {
+                    var field = fields[key];
+
+                    $container.append(field.editor.render().el);
+                });
+            });
+
+            //Render standalone fields
+            $form.find('[data-fields]').add($form).each(function (i, el) {
+                var $container = $(el),
+                    selection = $container.attr('data-fields');
+
+                console.log($container);
+
+                if (_.isUndefined(selection)) {
+                    return;
+                }
+
+                //Work out which fields to include
+                var keys = (selection == '*')
+                    ? self.selectedFields || _.keys(fields)
+                    : selection.split(',');
+
+                console.log(fields);
+
+                //Add them
+                _.each(keys, function (key) {
+                    var field = fields[key];
+
+                    $container.append(field.render().el);
+                });
+            });
+
+            //Render fieldsets
+            $form.find('[data-fieldsets]').add($form).each(function (i, el) {
+                var $container = $(el),
+                    selection = $container.attr('data-fieldsets');
+
+                if (_.isUndefined(selection)) return;
+
+                _.each(self.fieldsets, function (fieldset) {
+                    $container.append(fieldset.render().el);
+                });
+            });
+
+            //Set the main element
+            self.setElement($form);
+
+            //Set class
+            $form.addClass(self.className);
+
+            return self;
+        };
 
         /**
          * Allows to facility html elements with backbone-forms or model functionality
@@ -443,16 +533,18 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             return this.each(function () {
                 var $this = $(this);
                 var data = $this.data('tb.backbone');
+
                 var options = typeof option == 'object' && option;
 
                 if (!data) {
                     $this.data('tb.backbone', (data = new Tornado.BackboneForm(this, options)));
+                    $this.data('tb.backbone').render();
                 }
                 if (typeof option == 'string') {
                     data[option]();
                 }
             });
-        }
+        };
         $.fn.backbone.Constructor = Tornado.BackboneForm;
 
         // Facile elements with backbone-forms

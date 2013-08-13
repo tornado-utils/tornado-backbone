@@ -69,7 +69,8 @@ Or directly use a bootstrap similiar approach:
     <form data-require="/api/js/user" data-model="UserModel">
       <legend>User Form</legend>
 
-      <!-- Form content will be injecked here, any existing content is preserved and used as template -->
+      <!-- Form content will be injecked here, any existing content is preserved -->
+      <div data-fields="email"></div>
     </form>
 
 All options for Backbone.Form can be passed as data-\* attributes.
