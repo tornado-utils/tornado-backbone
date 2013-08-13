@@ -13,8 +13,37 @@ so there are some specific 'hacks' for them.
 Development Status
 ==================
 
-The implementation is currently still a bleeding edge without a documentation,
+The implementation is currently still a bleeding edge without many documentation,
 but I hope to provide a meaningful documentation and release soon.
+
+require
+=======
+
+Tornado Backbone uses require.js for his depencies and for loading required models.
+
+The shim we use in production looks like:
+
+    require.config({
+        baseUrl: '/static/',
+        paths: {
+            underscore: "{{ handler.request.method }}://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min",
+            backbone: "{{ handler.request.method }}://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.0.0/backbone-min",
+            backbone_forms: "{{ handler.request.method }}://cdnjs.cloudflare.com/ajax/libs/backbone-forms/0.12.0/backbone-forms"
+        },
+        shim: {
+            underscore: {
+                exports: '_'
+            },
+            backbone: {
+                deps: ["underscore", "jquery"],
+                exports: "Backbone"
+            },
+            backbone_forms: {
+                deps: ["backbone"]
+            }
+        }
+    });
+
 
 backbone-forms
 ==============
@@ -34,6 +63,16 @@ And then create a form like:
         model: user
     }).render();
     $('body').append(form.el);
+
+Or directly use a bootstrap similiar approach:
+
+    <form data-require="/api/js/user" data-model="UserModel">
+      <legend>User Form</legend>
+
+      <!-- Form content will be injecked here, any existing content is preserved and used as template -->
+    </form>
+
+All options for Backbone.Form can be passed as data-\* attributes.
 
 Copyright license
 =================
