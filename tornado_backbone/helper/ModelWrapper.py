@@ -7,14 +7,41 @@ from collections import namedtuple
 import inspect
 import logging
 from sqlalchemy import inspect as sqinspect
+from sqlalchemy.exc import NoInspectionAvailable
 from sqlalchemy.ext.associationproxy import AssociationProxy
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import ColumnProperty
 from sqlalchemy.orm.attributes import QueryableAttribute
+from sqlalchemy.orm.interfaces import MapperProperty
 from sqlalchemy.orm.properties import RelationProperty
 
 __author__ = 'Martin Martimeo <martin@martimeo.de>'
 __date__ = '27.04.13 - 00:14'
+
+
+def _filter(instance, condition):
+    """
+        Filter properties of instace based on condition
+
+        :param instance:
+        :param condition:
+        :rtype: dict
+    """
+
+    # Use iterate_properties when available
+    if hasattr(instance, 'iterate_properties'):
+        return {field.key: field for field in instance.iterate_properties
+                if condition(field)}
+
+    # Try sqlalchemy inspection
+    try:
+        return {field.key: field for key, field in sqinspect(instance).all_orm_descriptors.items()
+                if condition(field)}
+
+    # Use Inspect
+    except NoInspectionAvailable:
+        return {field.key: field for key, field in inspect.getmembers(instance)
+                if condition(field)}
 
 
 class ModelWrapper(object):
@@ -90,13 +117,8 @@ class ModelWrapper(object):
 
             :param instance: Model ORM Instance
         """
-        if hasattr(instance, 'iterate_properties'):
-            return [field for field in instance.iterate_properties
-                    if isinstance(field, ColumnProperty)]
-        else:
-            return [field for key, field in inspect.getmembers(instance)
-                    if isinstance(field, QueryableAttribute)
-                and isinstance(field.property, ColumnProperty)]
+        return _filter(instance, lambda field: isinstance(field, ColumnProperty) or (
+        isinstance(field, QueryableAttribute) and isinstance(field.property, ColumnProperty)))
 
     @property
     def columns(self):
@@ -104,6 +126,23 @@ class ModelWrapper(object):
         @see get_columns
         """
         return self.get_columns(self.model)
+
+    @staticmethod
+    def get_attributes(instance) -> list:
+        """
+            Returns the attributes of the model
+
+            :param instance: Model ORM Instance
+        """
+        return _filter(instance,
+                       lambda field: isinstance(field, MapperProperty) or isinstance(field, QueryableAttribute))
+
+    @property
+    def attributes(self):
+        """
+        @see get_attributes
+        """
+        return self.get_attributes(self.model)
 
     @staticmethod
     def get_relations(instance) -> list:

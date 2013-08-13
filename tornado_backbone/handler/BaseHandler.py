@@ -81,31 +81,33 @@ class BaseHandler(RequestHandler):
         else:
             mwargs["idAttributes"] = l_primary_keys
 
+        # Columns
+        for key, field in self.model.attributes.items():
+            mwargs.setdefault("columnAttributes", []).append(field.key)
+            mwargs['schema'][field.key] = {}
+            mwargs['schema'][field.key].update(field.property.info)
+            mwargs['schema'][field.key].update(field.info)
+            if hasattr(field, "default") and field.default:
+                mwargs.setdefault("defaults", {})[field.key] = "%s" % field.default.arg
+            if hasattr(field, "type") and isinstance(field.type, Integer):
+                mwargs.setdefault("integerAttributes", []).append(field.key)
+            if hasattr(field, "type") and isinstance(field.type, Numeric):
+                mwargs.setdefault("numericAttributes", []).append(field.key)
+            if 'readonly' in field.info and field.info['readonly']:
+                mwargs.setdefault("readonlyAttributes", []).append(field.key)
+
         # Foreign Keys
         cwargs['foreignAttributes'] = []
         cwargs['foreignCollections'] = {}
         cwargs['foreignRequirements'] = []
         for key, column in self.model.foreign_keys.items():
+            mwargs['schema'][column.key].update({'type': 'NestedModel', 'model': '%sModel' % list(column.foreign_keys)[
+                0].column.table.__collectionname__})
             if len(column.foreign_keys) > 1:
                 raise Exception("Can't handle multiple foreign key columns")
             cwargs['foreignCollections'][key] = list(column.foreign_keys)[0].column.table.__collectionname__
             cwargs['foreignAttributes'].append(key)
             cwargs['foreignRequirements'].append(self.own_url + "/" + cwargs['foreignCollections'][key])
-
-        # Columns
-        for column in self.model.columns:
-            mwargs.setdefault("columnAttributes", []).append(column.key)
-            mwargs['schema'][column.key] = {}
-            mwargs['schema'][column.key].update(column.property.info)
-            mwargs['schema'][column.key].update(column.info)
-            if column.default:
-                mwargs.setdefault("defaults", {})[column.key] = "%s" % column.default.arg
-            if isinstance(column.type, Integer):
-                mwargs.setdefault("integerAttributes", []).append(column.key)
-            if isinstance(column.type, Numeric):
-                mwargs.setdefault("numericAttributes", []).append(column.key)
-            if 'readonly' in column.info and column.info['readonly']:
-                mwargs.setdefault("readonlyAttributes", []).append(column.key)
 
         # Relations
         for relation in self.model.relations:
