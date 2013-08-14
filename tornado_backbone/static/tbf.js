@@ -6,7 +6,7 @@
  * Extension to backbone_forms
  */
 
-require(["jquery", "underscore", "backbone", "backbone_forms"],function ($, _, Backbone, BackboneForms) {
+require(["jquery", "underscore", "backbone", "backbone_forms"],function ($, _, Backbone, BackboneForm) {
     var self = this.Tornado || {};
     var Tornado = this.Tornado = self;
 
@@ -36,8 +36,6 @@ require(["jquery", "underscore", "backbone", "backbone_forms"],function ($, _, B
             $form = this.$element,
             fields = this.form.fields;
 
-        console.log(self);
-
         //Render standalone editors
         $form.find('[data-editors]').add($form).each(function (i, el) {
             var $container = $(el),
@@ -65,8 +63,6 @@ require(["jquery", "underscore", "backbone", "backbone_forms"],function ($, _, B
             var $container = $(el),
                 selection = $container.attr('data-fields');
 
-            console.log($container);
-
             if (_.isUndefined(selection)) {
                 return;
             }
@@ -75,8 +71,6 @@ require(["jquery", "underscore", "backbone", "backbone_forms"],function ($, _, B
             var keys = (selection == '*')
                 ? self.selectedFields || _.keys(fields)
                 : selection.split(',');
-
-            console.log(fields);
 
             //Add them
             _.each(keys, function (key) {
