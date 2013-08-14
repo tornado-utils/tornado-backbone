@@ -76,7 +76,16 @@ require(["jquery", "underscore", "backbone", "backbone_forms"],function ($, _, B
             _.each(keys, function (key) {
                 var field = fields[key];
 
-                $container.append(field.render().el);
+                field.schema = field.schema || {};
+                field.schema = _.extend(field.schema, $container.data("schema"));
+
+                var $el = $container.append(field.render().el);
+
+                // Update editor Attrs
+                field.schema.editorAttrs = field.schema.editorAttrs || {};
+                field.schema.editorAttrs = _.extend(field.schema.editorAttrs, $container.data("editorAttrs"));
+                $el.find("[data-editor] input").attr(field.schema.editorAttrs);
+
             });
         });
 
@@ -125,18 +134,16 @@ require(["jquery", "underscore", "backbone", "backbone_forms"],function ($, _, B
     $.fn.backbone.Constructor = Tornado.BackboneForm;
 
     // Facile elements with backbone-forms
-    $(window).on('load', function () {
-        $('[data-model][data-require]').each(function () {
-            var $form = $(this);
+    $('[data-model][data-require]').each(function () {
+        var $form = $(this);
 
-            require([$(this).data('require')], function () {
-                $form.backbone($form.data())
-            });
+        require([$(this).data('require')], function () {
+            $form.backbone($form.data())
         });
-        $('[data-model]:not([data-require])').each(function () {
-            var $form = $(this);
-            $form.backbone($form.data());
-        });
+    });
+    $('[data-model]:not([data-require])').each(function () {
+        var $form = $(this);
+        $form.backbone($form.data());
     });
 
     return Tornado;
