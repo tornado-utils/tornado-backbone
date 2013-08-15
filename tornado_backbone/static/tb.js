@@ -65,6 +65,11 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
         idAttributes: null,
 
         /**
+         * Information about the defined relations for the model
+         */
+        relations: [],
+
+        /**
          * Bunch of information about the model
          */
         columnAttributes: [], //! All columns
@@ -72,20 +77,6 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
         integerAttributes: [], //! Columns represented as int
         numericAttributes: [], //! Columns represented as float
         readonlyAttributes: [], //! Columns with 'readonly' in column.info
-
-        /**
-         * Set deferred for chaining actions on fully loaded models & collections
-         */
-        initialize: function () {
-            var dfd = this.deferred = new jQuery.Deferred();
-            if (this.hasOwnProperty("collection")) {
-                this.collection.deferred.done(function () {
-                    dfd.resolve();
-                });
-            } else {
-                dfd.resolve();
-            }
-        },
 
         /**
          * Sync method with adds xsrf_token if available
@@ -111,13 +102,6 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
         // Objects on page
         page_length: 25,
         num_results: null,
-
-        /**
-         * References of the collection based on the sqlalchemy model
-         */
-        foreignAttributes: [],
-        foreignCollections: {},
-        foreignRequirements: [],
 
         /**
          * Is this Collection fully loaded?
@@ -148,17 +132,6 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             }
 
             return objects;
-        },
-
-        /**
-         * Load all required foreign collections
-         */
-        initialize: function () {
-            var dfd = this.deferred = new jQuery.Deferred();
-
-            require(this.foreignRequirements, function () {
-                dfd.resolve();
-            });
         }
     });
 

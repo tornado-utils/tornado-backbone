@@ -29,6 +29,7 @@ class ApiManager(object):
                              collection_name: str=None,
                              blueprint_prefix: str='js/',
                              enforce_jssuffix: bool=None,
+                             enforce_jsonsuffix: bool=None,
                              handler_class: BaseHandler=BaseHandler) -> URLSpec:
         """
         Register the model under collection_name or __tablename__
@@ -40,9 +41,12 @@ class ApiManager(object):
         :param api_url: Url of the Restless Api
         :param collection_name:
         :param blueprint_prefix: The Prefix that will be used to unique collection_name for named_handlers
-        :param enforce_jssuffix:  * True: the url is suffixed with .js
-                                  * None: the url can be suffiexed with .js
-                                  * False: the url may not be suffiexed with .js
+        :param enforce_jssuffix:    * True: the url is suffixed with .js
+                                    * None: the url can be suffiexed with .js
+                                    * False: the url may not be suffiexed with .js
+        :param enforce_jsonsuffix:  * True: the url is suffixed with .json
+                                    * None: the url can be suffiexed with .json
+                                    * False: the url may not be suffiexed with .json
         :param handler_class: The Handler Class that will be registered, for customisation extend BaseHandler
         :return: tornado route
         :raise: IllegalArgumentError
@@ -56,14 +60,16 @@ class ApiManager(object):
                   'table_name': model.__collectionname__}
 
         if enforce_jssuffix is True:
-            jssuffix = r"\.js"
-        elif enforce_jssuffix is False:
-            jssuffix = r"$"
+            urlsuffix = r"(?P<ftype>\.js){1}"
+        elif enforce_jsonsuffix is True:
+            urlsuffix = r"(?P<ftype>\.json){1}"
+        elif enforce_jssuffix is False or enforce_jssuffix is False:
+            urlsuffix = r"$"
         else:
-            jssuffix = r"(?:\.js)?"
+            urlsuffix = r"(?P<ftype>\.(?:js|json))?"
 
         blueprint = URLSpec(
-            r"%s/%s%s" % (url_prefix, model.__collectionname__, jssuffix),
+            r"%s/%s%s" % (url_prefix, model.__collectionname__, urlsuffix),
             handler_class,
             kwargs,
             '%s%s' % (blueprint_prefix, model.__collectionname__))

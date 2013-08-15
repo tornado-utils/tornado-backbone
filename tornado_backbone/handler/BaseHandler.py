@@ -5,6 +5,7 @@
 """
 import hashlib
 from sqlalchemy import Integer, Numeric
+from sqlalchemy.orm.interfaces import MANYTOMANY, MANYTOONE, ONETOMANY
 from tornado.escape import json_encode
 from tornado.web import RequestHandler
 
@@ -54,7 +55,7 @@ class BaseHandler(RequestHandler):
         """
         return self.hash.hexdigest()
 
-    def get(self):
+    def get(self, ftype=None):
         """
             GET request
         """
@@ -64,6 +65,9 @@ class BaseHandler(RequestHandler):
         if self.check_etag_header():
             self.set_status(304)
             return
+
+        # The type we requested
+        ftype = self.get_argument('ftype', ftype)
 
         # Args to build model
         mwargs = {'urlRoot': self.api_url + "/" + self.model.__collectionname__,
@@ -97,26 +101,55 @@ class BaseHandler(RequestHandler):
                 mwargs.setdefault("readonlyAttributes", []).append(field.key)
 
         # Foreign Keys
-        cwargs['foreignAttributes'] = []
-        cwargs['foreignCollections'] = {}
-        cwargs['foreignRequirements'] = []
-        for key, column in self.model.foreign_keys.items():
-            mwargs['schema'][column.key].update({'type': 'NestedModel', 'model': '%sModel' % list(column.foreign_keys)[
-                0].column.table.__collectionname__})
-            if len(column.foreign_keys) > 1:
-                raise Exception("Can't handle multiple foreign key columns")
-            cwargs['foreignCollections'][key] = list(column.foreign_keys)[0].column.table.__collectionname__
-            cwargs['foreignAttributes'].append(key)
-            cwargs['foreignRequirements'].append(self.own_url + "/" + cwargs['foreignCollections'][key])
+        mwargs['relations'] = []
+        for relation_key, relation in self.model.relations.items():
+            relation_info = relation.info
+            relation_info.setdefault('key', relation_key)
 
-        # Relations
-        for relation in self.model.relations:
-            mwargs.setdefault("relationAttributes", []).append(relation.key)
+            # Get the local columns in this table
+            local_columns = list(relation.property.local_columns)
+            if len(local_columns) > 1:
+                raise Exception("Can't handle multiple key columns for relation")
+            local_column = local_columns[0]
 
-        self.set_header("Content-Type", "application/javascript; charset=UTF-8")
-        self.write('var %s = Tornado.Model.extend(%s);' % (cwargs["model"], json_encode(mwargs)))
-        self.write('var %sCollection = Tornado.Collection.extend(%s);' % (cwargs["name"], json_encode(cwargs)))
-        self.write('%s = new %sCollection;' % (self.table_name, cwargs["name"]))
+            # Find our column in the mapping
+            for key, column in self.model.columns.items():
+                if column.name == local_column.key:
+                    local_column = column
+                    break
+            else:
+                raise Exception("Could not find local column name attr for relation: %s" % relation_key)
+            relation_info.setdefault('keySource', local_column.key)
+            relation_info.setdefault('foreignKey', local_column.name)
+
+            # Model & Collection
+            target = relation.property.target
+            relation_info.setdefault('relatedModel', "%sModel" % target.__collectionname__)
+            relation_info.setdefault('collectionType', "%sCollection" % target.__collectionname__)
+
+            # HasMany / HasOne
+            relation_info.setdefault('reverseRelation', {})
+            if relation.property.direction is MANYTOMANY or relation.property.direction is MANYTOONE:
+                relation_info.setdefault('type', 'HasMany')
+            else:
+                relation_info.setdefault('type', 'HasOne')
+
+            if relation.property.direction is MANYTOMANY or relation.property.direction is ONETOMANY:
+                relation_info['reverseRelation'].setdefault('type', 'HasMany')
+            else:
+                relation_info['reverseRelation'].setdefault('type', 'HasOne')
+
+            mwargs['schema'].setdefault(relation_key, {}).update({'type': 'NestedModel', 'model': '%sModel' % target.__collectionname__})
+            mwargs['relations'].append(relation_info)
+
+        if ftype == "json":
+            self.set_header("Content-Type", "application/json; charset=UTF-8")
+            self.write({cwargs["model"]: mwargs, '%sCollection' % cwargs["name"]: cwargs})
+        else:
+            self.set_header("Content-Type", "application/javascript; charset=UTF-8")
+            self.write('var %s = Tornado.Model.extend(%s);' % (cwargs["model"], json_encode(mwargs)))
+            self.write('var %sCollection = Tornado.Collection.extend(%s);' % (cwargs["name"], json_encode(cwargs)))
+            self.write('%s = new %sCollection;' % (self.table_name, cwargs["name"]))
 
 
 

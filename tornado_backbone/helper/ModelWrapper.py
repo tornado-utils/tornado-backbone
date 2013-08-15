@@ -13,7 +13,8 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import ColumnProperty
 from sqlalchemy.orm.attributes import QueryableAttribute
 from sqlalchemy.orm.interfaces import MapperProperty
-from sqlalchemy.orm.properties import RelationProperty
+from sqlalchemy.orm.properties import RelationshipProperty
+from sqlalchemy.util import memoized_property
 
 __author__ = 'Martin Martimeo <martin@martimeo.de>'
 __date__ = '27.04.13 - 00:14'
@@ -82,7 +83,7 @@ class ModelWrapper(object):
                    and isinstance(field.property, ColumnProperty)
         and field.property.columns[0].primary_key}
 
-    @property
+    @memoized_property
     def primary_keys(self):
         """
         @see get_primary_keys
@@ -103,7 +104,7 @@ class ModelWrapper(object):
                    and isinstance(field.property, ColumnProperty)
         and field.foreign_keys}
 
-    @property
+    @memoized_property
     def foreign_keys(self):
         """
         @see get_foreign_keys
@@ -120,7 +121,7 @@ class ModelWrapper(object):
         return _filter(instance, lambda field: isinstance(field, ColumnProperty) or (
         isinstance(field, QueryableAttribute) and isinstance(field.property, ColumnProperty)))
 
-    @property
+    @memoized_property
     def columns(self):
         """
         @see get_columns
@@ -137,7 +138,7 @@ class ModelWrapper(object):
         return _filter(instance,
                        lambda field: isinstance(field, MapperProperty) or isinstance(field, QueryableAttribute))
 
-    @property
+    @memoized_property
     def attributes(self):
         """
         @see get_attributes
@@ -151,15 +152,10 @@ class ModelWrapper(object):
 
             :param instance: Model ORM Instance
         """
-        if hasattr(instance, 'iterate_properties'):
-            return [field for field in instance.iterate_properties
-                    if isinstance(field, RelationProperty)]
-        else:
-            return [field for key, field in inspect.getmembers(instance)
-                    if isinstance(field, QueryableAttribute)
-                and isinstance(field.property, RelationProperty)]
+        return _filter(instance, lambda field: isinstance(field, RelationshipProperty) or (
+            isinstance(field, QueryableAttribute) and isinstance(field.property, RelationshipProperty)))
 
-    @property
+    @memoized_property
     def relations(self):
         """
         @see get_relations
@@ -181,7 +177,7 @@ class ModelWrapper(object):
             return [Proxy(key, field) for key, field in inspect.getmembers(instance)
                     if isinstance(field, hybrid_property)]
 
-    @property
+    @memoized_property
     def hybrids(self):
         """
         @see get_hybrids
@@ -205,7 +201,7 @@ class ModelWrapper(object):
             return [Proxy(key, field) for key, field in inspect.getmembers(instance)
                     if isinstance(field, AssociationProxy)]
 
-    @property
+    @memoized_property
     def proxies(self):
         """
         @see get_proxies
