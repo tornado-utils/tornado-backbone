@@ -4,7 +4,7 @@
 
 """
 import hashlib
-from sqlalchemy import Integer, Numeric
+from sqlalchemy.types import Integer, Numeric, String
 from sqlalchemy.orm.interfaces import MANYTOMANY, MANYTOONE, ONETOMANY
 from tornado.escape import json_encode
 from tornado.web import RequestHandler
@@ -80,7 +80,7 @@ class BaseHandler(RequestHandler):
 
         # Primary Keys
         l_primary_keys = list(self.model.primary_keys)
-        if l_primary_keys == 1:
+        if len(l_primary_keys) == 1:
             mwargs["idAttribute"] = l_primary_keys[0]
         else:
             mwargs["idAttributes"] = l_primary_keys
@@ -94,11 +94,17 @@ class BaseHandler(RequestHandler):
             if hasattr(field, "default") and field.default:
                 mwargs.setdefault("defaults", {})[field.key] = "%s" % field.default.arg
             if hasattr(field, "type") and isinstance(field.type, Integer):
-                mwargs.setdefault("integerAttributes", []).append(field.key)
-            if hasattr(field, "type") and isinstance(field.type, Numeric):
-                mwargs.setdefault("numericAttributes", []).append(field.key)
-            if 'readonly' in field.info and field.info['readonly']:
-                mwargs.setdefault("readonlyAttributes", []).append(field.key)
+                mwargs['schema'][field.key].setdefault("type", "Text")
+                mwargs['schema'][field.key].setdefault("dataType", "number")
+                mwargs['schema'][field.key].setdefault("editorAttrs", {}).setdefault("step", "1.0")
+            elif hasattr(field, "type") and isinstance(field.type, Numeric):
+                mwargs['schema'][field.key].setdefault("type", "Text")
+                mwargs['schema'][field.key].setdefault("dataType", "number")
+                mwargs['schema'][field.key].setdefault("editorAttrs", {}).setdefault("step", "any")
+            elif hasattr(field, "type") and isinstance(field.type, String):
+                mwargs['schema'][field.key].setdefault("type", "Text")
+            elif hasattr(field, "type"):
+                mwargs['schema'][field.key].setdefault("type", "%s" % field.type.__class__.__name__)
 
         # Foreign Keys
         mwargs['relations'] = []
