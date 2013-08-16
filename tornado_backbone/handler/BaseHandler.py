@@ -137,16 +137,17 @@ class BaseHandler(RequestHandler):
             relation_info.setdefault('reverseRelation', {})
             if relation.property.direction is MANYTOMANY or relation.property.direction is MANYTOONE:
                 relation_info.setdefault('type', 'HasMany')
+                mwargs['schema'].setdefault(relation_key, {}).update(
+                    {'type': 'List', 'itemType': 'NestedModel', 'model': '%sModel' % target.__collectionname__})
             else:
                 relation_info.setdefault('type', 'HasOne')
+                mwargs['schema'].setdefault(relation_key, {}).update(
+                    {'type': 'Select', 'collection': '%sCollection' % target.__collectionname__})
 
             if relation.property.direction is MANYTOMANY or relation.property.direction is ONETOMANY:
                 relation_info['reverseRelation'].setdefault('type', 'HasMany')
             else:
                 relation_info['reverseRelation'].setdefault('type', 'HasOne')
-
-            mwargs['schema'].setdefault(relation_key, {}).update(
-                {'type': 'Select', 'collection': '%sCollection' % target.__collectionname__})
             mwargs['relations'].append(relation_info)
 
         if ftype == "json":
