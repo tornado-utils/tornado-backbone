@@ -164,7 +164,7 @@ require(["jquery", "underscore", "backbone", "backbone_forms"],function ($, _, B
     $('[data-model][data-require]').each(function () {
         var $form = $(this);
 
-        require([$(this).data('require')], function () {
+        require($(this).data('require').split(" "), function () {
             $form.backbone($form.data())
         });
     });
