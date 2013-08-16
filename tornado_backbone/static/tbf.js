@@ -15,7 +15,7 @@ require(["jquery", "underscore", "backbone", "backbone_forms"],function ($, _, B
         this.options = $.extend({}, Tornado.BackboneForm.DEFAULTS, options);
 
         if (this.options.model) {
-            if (typeof this.options.model == "string") {
+            if (_.isString(this.options.model)) {
                 this.model = this.options.model = new window[this.options.model]();
             } else {
                 this.model = this.options.model;

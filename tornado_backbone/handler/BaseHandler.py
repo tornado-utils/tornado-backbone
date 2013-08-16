@@ -145,7 +145,8 @@ class BaseHandler(RequestHandler):
             else:
                 relation_info['reverseRelation'].setdefault('type', 'HasOne')
 
-            mwargs['schema'].setdefault(relation_key, {}).update({'type': 'NestedModel', 'model': '%sModel' % target.__collectionname__})
+            mwargs['schema'].setdefault(relation_key, {}).update(
+                {'type': 'Select', 'collection': '%sCollection' % target.__collectionname__})
             mwargs['relations'].append(relation_info)
 
         if ftype == "json":
@@ -153,9 +154,10 @@ class BaseHandler(RequestHandler):
             self.write({cwargs["model"]: mwargs, '%sCollection' % cwargs["name"]: cwargs})
         else:
             self.set_header("Content-Type", "application/javascript; charset=UTF-8")
-            self.write('var %s = Tornado.Model.extend(%s);' % (cwargs["model"], json_encode(mwargs)))
-            self.write('var %sCollection = Tornado.Collection.extend(%s);' % (cwargs["name"], json_encode(cwargs)))
-            self.write('%s = new %sCollection;' % (self.table_name, cwargs["name"]))
+            self.write('var %s = Tornado.Model.extend(%s);\n' % (cwargs["model"], json_encode(mwargs)))
+            self.write('var %sCollection = Tornado.Collection.extend(%s);\n' % (cwargs["name"], json_encode(cwargs)))
+            self.write('%sCollection.prototype.model = %s;\n' % (cwargs["name"], cwargs["model"]))
+            self.write('%s = new %sCollection();\n' % (self.table_name, cwargs["name"]))
 
 
 
