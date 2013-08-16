@@ -54,7 +54,12 @@ require(["jquery", "underscore", "backbone", "backbone_forms"],function ($, _, B
             _.each(keys, function (key) {
                 var field = fields[key];
 
-                $container.append(field.editor.render().el);
+                var $el, el = field.editor.render().el;
+                if ($.webshims) {
+                    $el = $container.appendPolyfill(el);
+                } else {
+                    $el = $container.append(el);
+                }
             });
 
             $container.removeAttr('data-editors');
@@ -81,7 +86,12 @@ require(["jquery", "underscore", "backbone", "backbone_forms"],function ($, _, B
                 field.schema = field.schema || {};
                 field.schema = _.extend(field.schema, $container.data("schema"));
 
-                var $el = $container.append(field.render().el);
+                var $el, el = field.render().el;
+                if ($.webshims) {
+                    $el = $container.appendPolyfill(el);
+                } else {
+                    $el = $container.append(el);
+                }
 
                 // Update editor Attrs
                 field.schema.editorAttrs = field.schema.editorAttrs || {};
@@ -101,7 +111,18 @@ require(["jquery", "underscore", "backbone", "backbone_forms"],function ($, _, B
             if (_.isUndefined(selection)) return;
 
             _.each(self.fieldsets, function (fieldset) {
-                $container.append(fieldset.render().el);
+
+                var $el, el = fieldset.render().el;
+                if ($.webshims) {
+                    $el = $container.appendPolyfill(el);
+                } else {
+                    $el = $container.append(el);
+                }
+
+                // Update editor Attrs
+                fieldset.schema.editorAttrs = fieldset.schema.editorAttrs || {};
+                fieldset.schema.editorAttrs = _.extend(fieldset.schema.editorAttrs, $container.data("editorAttrs"));
+                $el.find("[data-editor] input").attr(fieldset.schema.editorAttrs);
             });
 
             $container.removeAttr('data-fieldsets');
