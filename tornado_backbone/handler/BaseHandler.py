@@ -135,7 +135,7 @@ class BaseHandler(RequestHandler):
 
             # HasMany / HasOne
             relation_info.setdefault('reverseRelation', {})
-            if relation.property.direction is MANYTOMANY or relation.property.direction is MANYTOONE:
+            if relation.property.direction is MANYTOMANY or relation.property.direction is ONETOMANY:
                 relation_info.setdefault('type', 'HasMany')
                 mwargs['schema'].setdefault(relation_key, {}).update(
                     {'type': 'List', 'itemType': 'NestedModel', 'model': '%sModel' % target.__collectionname__})
@@ -144,7 +144,7 @@ class BaseHandler(RequestHandler):
                 mwargs['schema'].setdefault(relation_key, {}).update(
                     {'type': 'Select', 'collection': '%sCollection' % target.__collectionname__})
 
-            if relation.property.direction is MANYTOMANY or relation.property.direction is ONETOMANY:
+            if relation.property.direction is MANYTOMANY or relation.property.direction is MANYTOONE:
                 relation_info['reverseRelation'].setdefault('type', 'HasMany')
             else:
                 relation_info['reverseRelation'].setdefault('type', 'HasOne')
