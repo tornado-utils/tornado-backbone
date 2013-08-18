@@ -74,9 +74,78 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
          */
         columnAttributes: [], //! All columns
         relationAttributes: [], //! All relations
-        integerAttributes: [], //! Columns represented as int
-        numericAttributes: [], //! Columns represented as float
         readonlyAttributes: [], //! Columns with 'readonly' in column.info
+
+        /**
+         * Guess the type based on the schema
+         *
+         * @param attribute
+         */
+        is_numeric: function (attribute) {
+            if (this.schema.hasOwnProperty(attribute)) {
+                if (this.schema[attribute].type == "Number") {
+                    return true;
+                }
+                if (this.schema[attribute].type == "Text" && this.schema[attribute].dataType == "number") {
+                    return true;
+                }
+            }
+            return false;
+        },
+
+        /**
+         * Guess the type based on the schema
+         *
+         * @param attribute
+         */
+        is_datetime: function (attribute) {
+            if (this.schema.hasOwnProperty(attribute)) {
+                if (this.schema[attribute].type == "DateTime") {
+                    return true;
+                }
+                if (this.schema[attribute].type == "Text" && this.schema[attribute].dataType == "datetime") {
+                    return true;
+                }
+            }
+            return false;
+        },
+
+        /**
+         * Resolve all attributes that are datetimes
+         *
+         * @returns {*}
+         */
+        getDatetimeAttributes: function () {
+            if (this.hasOwnProperty("datetimeAttributes")) {
+                return this.datetimeAttributes;
+            }
+            var i, l, attribute, attributes = [];
+            for (i = 0, l = this.columnAttributes.length; i < l; i++) {
+                attribute = this.columnAttributes[i];
+                if (this.is_datetime(attribute)) {
+                    attributes.push(attribute);
+                }
+            }
+            this.datetimeAttributes = attributes;
+            return attributes;
+        },
+
+        /**
+         * Overwriten parse to support datetime strings
+         * @param response
+         * @param options
+         * @returns attributes
+         */
+        parse: function (response, options) {
+            var attributes = Backbone.Model.prototype.parse.call(this, response, options);
+
+            var i, l, attribute;
+            for (i = 0, l = this.getDatetimeAttributes().length; i < l; i++) {
+                attribute = this.datetimeAttributes[i];
+                attributes[attribute] = new Date(attributes[attribute])
+            }
+            return attributes;
+        },
 
         /**
          * Sync method with adds xsrf_token if available
