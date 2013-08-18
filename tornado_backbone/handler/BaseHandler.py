@@ -4,7 +4,7 @@
 
 """
 import hashlib
-from sqlalchemy.types import Integer, Numeric, String
+from sqlalchemy.types import Integer, Numeric, String, Date, DateTime, Time
 from sqlalchemy.orm.interfaces import MANYTOMANY, MANYTOONE, ONETOMANY
 from tornado.escape import json_encode
 from tornado.web import RequestHandler
@@ -101,6 +101,12 @@ class BaseHandler(RequestHandler):
                 mwargs['schema'][field.key].setdefault("type", "Text")
                 mwargs['schema'][field.key].setdefault("dataType", "number")
                 mwargs['schema'][field.key].setdefault("editorAttrs", {}).setdefault("step", "any")
+            elif hasattr(field, "type") and isinstance(field.type, Date):
+                mwargs['schema'][field.key].setdefault("type", "Date")
+            elif hasattr(field, "type") and isinstance(field.type, DateTime):
+                mwargs['schema'][field.key].setdefault("type", "DateTime")
+            elif hasattr(field, "type") and isinstance(field.type, Time):
+                mwargs['schema'][field.key].setdefault("type", "Time")
             elif hasattr(field, "type") and isinstance(field.type, String):
                 mwargs['schema'][field.key].setdefault("type", "Text")
             elif hasattr(field, "type"):
