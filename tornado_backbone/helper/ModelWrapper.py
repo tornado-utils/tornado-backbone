@@ -78,10 +78,8 @@ class ModelWrapper(object):
 
             :param instance: Model ORM Instance
         """
-        return {field.key: field for key, field in inspect.getmembers(instance)
-                if isinstance(field, QueryableAttribute)
-                   and isinstance(field.property, ColumnProperty)
-        and field.property.columns[0].primary_key}
+        return _filter(instance, lambda field: isinstance(field, ColumnProperty) and field.primary_key or (
+            isinstance(field, QueryableAttribute) and isinstance(field.property, ColumnProperty) and field.property.columns[0].primary_key))
 
     @memoized_property
     def primary_keys(self):
@@ -89,6 +87,25 @@ class ModelWrapper(object):
         @see get_primary_keys
         """
         return self.get_primary_keys(self.model)
+
+    @staticmethod
+    def get_unique_keys(instance) -> list:
+        """
+            Returns the primary keys
+
+            Inspired by flask-restless.helpers.primary_key_names
+
+            :param instance: Model ORM Instance
+        """
+        return _filter(instance, lambda field: isinstance(field, ColumnProperty) and field.unique or (
+            isinstance(field, QueryableAttribute) and isinstance(field.property, ColumnProperty) and field.property.columns[0].unique))
+
+    @memoized_property
+    def unique_keys(self):
+        """
+        @see get_primary_keys
+        """
+        return self.get_unique_keys(self.model)
 
     @staticmethod
     def get_foreign_keys(instance) -> list:
@@ -119,7 +136,7 @@ class ModelWrapper(object):
             :param instance: Model ORM Instance
         """
         return _filter(instance, lambda field: isinstance(field, ColumnProperty) or (
-        isinstance(field, QueryableAttribute) and isinstance(field.property, ColumnProperty)))
+            isinstance(field, QueryableAttribute) and isinstance(field.property, ColumnProperty)))
 
     @memoized_property
     def columns(self):
