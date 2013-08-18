@@ -48,21 +48,24 @@ The shim we use in production looks like:
 backbone-forms
 ==============
 
-The Tornado.Model exposes all information of the `info` dict as schema attribute in the backbone model.
-So for interaction with backbone-forms you can define for example your column like:
+If you want to have support for backbone-forms include the `tbf.js`.
+Tornado Backbone exposes all information of the `info` dict as schema attribute in the backbone model
+ and falls back on some defaults if there is no information (like for integer).
+For interaction with backbone-forms you can define for example your column like:
 
     class User(Base):
         email = Column(String, info={'type': 'Text', 'dataType': 'email', 'validators': ['email']})
 
 And then create a form like:
 
-    require('/api/js/user');
-    var user = new UserModel();
+    require(['/api/js/user'], function () {
+        var user = new UserModel();
 
-    var form = new Backbone.Form({
-        model: user
-    }).render();
-    $('body').append(form.el);
+        var form = new Backbone.Form({
+            model: user
+        }).render();
+        $('body').append(form.el);
+    }
 
 Or directly use a bootstrap similiar approach:
 
@@ -74,6 +77,31 @@ Or directly use a bootstrap similiar approach:
     </form>
 
 All options for Backbone.Form can be passed as data-\* attributes.
+If you have relations in your model that you want to use, it may require to load the depencies:
+
+    class UserTitle(Base):
+        id: Column(Integer)
+        title: Column(String)
+
+    class User(Base):
+        title_id = Column(ForeignId(UserTitle.id))
+        title = relationship(UserTitle)
+        email = Column(String, info={'type': 'Text', 'dataType': 'email', 'validators': ['email']})
+
+Leads to displaying a form with email and title:
+
+    <form data-require="/api/js/user_title /api/js/user" data-model="UserModel">
+      <legend>User Form</legend>
+
+      <div data-fields="title"></div> <!-- Select Box with Title -->
+      <div data-fields="email"></div> <!-- Text Box with Validator for email -->
+    </form>
+
+backbone-relations
+==================
+
+Tornado Backbone exposes relations in a backbone-relations compatible way.
+If you include `tbr.js` in your project all models will be based on Backbone.RelationalModel
 
 Copyright license
 =================

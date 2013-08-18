@@ -14,6 +14,15 @@ __date__ = '26.04.13 - 22:25'
 
 
 class ApiManager(object):
+    """
+        Main Entry Point for creating routes to handle models
+
+        create_api_blueprint creates a tornado.URLSpec for handling a model,
+        that can then be added to a list of routes your application handles.
+
+        create_api creates a URLSpec and directly adds it to the application.
+    """
+
     def __init__(self,
                  application: Application):
         """
@@ -36,10 +45,10 @@ class ApiManager(object):
 
         Make sure to register all relationships of this model aswell if you want to access them in your backbone
 
-        :param model:
-        :param url_prefix:
+        :param model: SQLALchemy Model
+        :param url_prefix: Url prefix of this Api
         :param api_url: Url of the Restless Api
-        :param collection_name:
+        :param collection_name: Name for this model to be registered and referenced, defaults to __tablename__
         :param blueprint_prefix: The Prefix that will be used to unique collection_name for named_handlers
         :param enforce_jssuffix:    * True: the url is suffixed with .js
                                     * None: the url can be suffiexed with .js
@@ -47,8 +56,9 @@ class ApiManager(object):
         :param enforce_jsonsuffix:  * True: the url is suffixed with .json
                                     * None: the url can be suffiexed with .json
                                     * False: the url may not be suffiexed with .json
-        :param handler_class: The Handler Class that will be registered, for customisation extend BaseHandler
-        :return: tornado route
+        :param handler_class: The Handler Class that will be registered
+        :type handler_class: :class:`handler.BaseHandler`
+        :return: :class:`tornado.web.URLSpec`
         :raise: IllegalArgumentError
         """
         model.__collectionname__ = collection_name if collection_name is not None else model.__tablename__
@@ -66,7 +76,7 @@ class ApiManager(object):
         elif enforce_jssuffix is False or enforce_jssuffix is False:
             urlsuffix = r"$"
         else:
-            urlsuffix = r"(?P<ftype>\.(?:js|json))?"
+            urlsuffix = r"(?P<ftype>\.js|\.json)?"
 
         blueprint = URLSpec(
             r"%s/%s%s" % (url_prefix, model.__collectionname__, urlsuffix),
@@ -97,7 +107,8 @@ class ApiManager(object):
 
         self.application.named_handlers[blueprint.name] = blueprint
 
-    def invalidate(self):
+    @staticmethod
+    def invalidate():
         """
             Tornado Backbone aggresivly set and checks etag based
 
