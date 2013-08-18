@@ -93,7 +93,20 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
                 options.headers['X-XSRFToken'] = Tornado.xsrf_token;
             }
             return Backbone.sync(method, model, options);
+        },
+
+        /**
+         * If the model provides a __str__ attribute
+         * this will be used to displays in like backbone.forms
+         */
+        toString: function () {
+            var rtn = this.get('__str__');
+            if (rtn) {
+                return rtn;
+            }
+            return "[object Tornado.Model at " + this.url() + "]";
         }
+
 
     });
 
