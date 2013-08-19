@@ -210,9 +210,9 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             this.num_results = data.num_results || data.length;
             this.page = data.page || 1;
             if (this.num_results < this.models.length + objects.length) {
-                this.trigger("pagination:load");
+                this.trigger("pagination.tornado", "load");
             } else {
-                this.trigger("pagination:complete");
+                this.trigger("pagination.tornado", "complete");
             }
 
             return objects;
@@ -257,6 +257,20 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
         addFilter: function (filter) {
             this.filters.push(filter);
             this.update(true);
+        },
+
+        /**
+         * filterBy value that looks like sqlalchemy (or not ...)
+         *
+         * @param key Key
+         * @param value Value
+         * @param op Operator
+         */
+        filterBy: function(key, value, op) {
+            if (!op) {
+                op = "eq";
+            }
+            this.addFilter({'name': key, 'val': value, 'op': op});
         },
 
         /**

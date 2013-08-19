@@ -28,7 +28,17 @@ require(["jquery", "underscore", "backbone", "backbone_forms"],function ($, _, B
 
             // Create Form
             this.form = new Backbone.Form(this.options);
+            this.listenTo(this.form, 'all', this.handleFormEvent);
+        },
 
+        handleFormEvent: function (event, form, node) {
+            this.trigger(event, node || form || this);
+
+            // Retrigger events in a slighty different way
+            var args = event.split(":");
+            if (args.length > 1) {
+                this.trigger(args[1] + ".tornado." + args[0], [form, node], node);
+            }
         },
 
         render: function () {
