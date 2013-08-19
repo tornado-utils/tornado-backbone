@@ -21,6 +21,9 @@ require(["jquery", "underscore", "backbone", "backbone_forms"],function ($, _, B
                 } else {
                     this.model = this.options.model;
                 }
+                if (_.isObject(this.options.value)) {
+                    this.model.set(this.options.value);
+                }
             }
 
             // Create Form
