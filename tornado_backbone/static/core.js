@@ -182,6 +182,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
     Tornado.Collection = Backbone.Collection.extend({
 
         // Objects on page
+        page: 1,
         page_length: 25,
         num_results: null,
 
@@ -207,6 +208,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             var objects = data.objects || data;
 
             this.num_results = data.num_results || data.length;
+            this.page = data.page || 1;
             if (this.num_results < this.models.length + objects.length) {
                 this.trigger("pagination:load");
             } else {

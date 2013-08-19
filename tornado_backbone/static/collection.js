@@ -37,10 +37,12 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
 
             if (collection.length > 0) {
                 self.renderElements(options);
+                self.renderFooter(options);
             } else {
                 collection.fetch({
                     success: function () {
                         self.renderElements(options);
+                        self.renderFooter(options);
                     }
                 });
             }
@@ -61,14 +63,74 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             collection.each(function (model) {
                 var $el = self.$el.find("> [name=" + model.cid + "]");
                 if ($el.length == 0) {
-                    $el = self.$el.append(self.template(model.attributes));
+                    $el = self.$el.prepend(self.template(model.attributes));
                 } else {
                     $el = $el.replaceWith(self.template(model.attributes));
                 }
                 $el.attr("name", model.cid);
             });
+        },
+
+        /**
+         * Renders the pagination layer
+         *
+         * Inspired by https://gist.github.com/io41/838460
+         * @param options
+         */
+        renderFooter: function (options) {
+            var self = this,
+                collection = this.collection;
+
+            var info = {
+                page: this.collection.page || 1,
+                page_length: this.collection.page_length,
+                pages: Math.ceil(this.collection.num_results / this.collection.page_length)
+            };
+
+            var $footer = self.$el.find("footer");
+            if ($footer.length) {
+                $footer.replaceWith(Tornado.BackboneCollection.footerTemplate(info));
+            } else {
+                $footer = self.$el.append(Tornado.BackboneCollection.footerTemplate(info));
+            }
+
+            if (info.page < 2) {
+                $footer.find(".btn-fast-backward").addClass("disabled");
+                $footer.find(".btn-step-backward").addClass("disabled");
+            } else if (info.page < 3) {
+                $footer.find(".btn-fast-backward").addClass("disabled");
+            }
+
+            if (info.page > info.total - 2) {
+                $footer.find(".btn-fast-forward").addClass("disabled");
+                $footer.find(".btn-step-forward").addClass("disabled");
+            } else if (info.page > info.total - 3) {
+                $footer.find(".btn-fast-forward").addClass("disabled");
+            }
         }
 
+    }, {
+        /* STATICS */
+
+        footerTemplate: _.template('\
+            <footer>\
+              <a class="btn btn-page btn-fast-backward"><i class="glyphicon glyphicon-fast-backward"></i></a>\
+              <a class="btn btn-page btn-step-backward"><i class="glyphicon glyphicon-step-backward"></i></a>\
+              <% if (page > 1) { %><a class="btn btn-page btn-page-number">1</a><% } %>\
+              <% if (page >= 6) { %><span class="btn btn-page btn-page-ellipses">...</span><% } %>\
+              <% if (page == 5) { %><a class="btn btn-page btn-page-number">2</a><% } %>\
+              <% if (page > 3) { %><a class="btn btn-page btn-page-number"><%= (page-2) %></a><% } %>\
+              <% if (page > 2) { %><a class="btn btn-page btn-page-number"><%= (page-1) %></a><% } %>\
+              <a class="btn btn-page btn-page-number btn-page-active"><%= page %></a>\
+              <% if (page < pages-1) { %><a class="btn btn-page btn-page-number"><%= (page+1) %></a><% } %>\
+              <% if (page < pages-2) { %><a class="btn btn-page btn-page-number"><%= (page+2) %></a><% } %>\
+              <% if (page == pages-3) { %><a class="btn btn-page btn-page-number"><%= (pages-1) %></a><% } %>\
+              <% if (page <= pages-4) { %><span class="btn btn-page btn-page-ellipses">...</span><% } %>\
+              <% if (page < pages) { %><a class="btn btn-page btn-page-number"><%= (pages) %></a><% } %>\
+              <a class="btn btn-page btn-step-forward"><i class="glyphicon glyphicon-step-forward"></i></a>\
+              <a class="btn btn-page btn-fast-forward"><i class="glyphicon glyphicon-fast-forward"></i></a>\
+            </footer>\
+        ')
     });
 
     /**
