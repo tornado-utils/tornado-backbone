@@ -56,6 +56,15 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             return self;
         },
 
+        filter: function (key, value, operator) {
+            var self = this,
+                collection = this.collection;
+
+            this.collection.filterBy(key, value, operator);
+
+            return self;
+        },
+
         renderElements: function (options) {
             var self = this,
                 collection = this.collection;
@@ -89,9 +98,9 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
 
             var $footer = self.$el.find("footer");
             if ($footer.length) {
-                $footer.replaceWith(Tornado.BackboneCollection.footerTemplate(info));
+                $footer.replaceWith(self.constructor.footerTemplate(info));
             } else {
-                $footer = self.$el.append(Tornado.BackboneCollection.footerTemplate(info));
+                $footer = self.$el.append(self.constructor.footerTemplate(info));
             }
 
             if (info.page < 2) {
