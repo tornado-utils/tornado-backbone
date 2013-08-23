@@ -39,6 +39,8 @@ class ApiManager(object):
                              blueprint_prefix: str='js/',
                              enforce_jssuffix: bool=None,
                              enforce_jsonsuffix: bool=None,
+                             model_base: str='Tornado.Model',
+                             collection_base: str='Tornado.Collection',
                              handler_class: BaseHandler=BaseHandler) -> URLSpec:
         """
         Register the model under collection_name or __tablename__
@@ -50,6 +52,9 @@ class ApiManager(object):
         :param api_url: Url of the Restless Api
         :param collection_name: Name for this model to be registered and referenced, defaults to __tablename__
         :param blueprint_prefix: The Prefix that will be used to unique collection_name for named_handlers
+        :param model_base: The javascript prototype to extend models from (for example Backbone.Model or Tornado.Model)
+        :param collection_base: The javascript prototype to extend collections from (for example Backbone.Collection or Tornado.Collection)
+                                If you want to use collection.js this should be Tornado.FilteredCollection
         :param enforce_jssuffix:    * True: the url is suffixed with .js
                                     * None: the url can be suffiexed with .js
                                     * False: the url may not be suffiexed with .js
@@ -67,6 +72,8 @@ class ApiManager(object):
         kwargs = {'model': model,
                   'api_url': api_url,
                   'own_url': url_prefix,
+                  'model_base': model_base,
+                  'collection_base': collection_base,
                   'table_name': model.__collectionname__}
 
         if enforce_jssuffix is True:

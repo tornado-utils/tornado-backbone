@@ -26,12 +26,18 @@ class BaseHandler(RequestHandler):
                    model,
                    api_url: str,
                    own_url: str,
-                   table_name: str):
+                   table_name: str,
+                   model_base: str='Tornado.Model',
+                   collection_base: str='Tornado.Collection'):
         """
 
+
         :param model: The Model for which this handler has been created
-        :param api_url: Location of the restless Api
+        :param api_url: Location of the restless api
         :param own_url: Location of ourself
+        :param model_base: The javascript prototype to extend models from (for example Backbone.Model or Tornado.Model)
+        :param collection_base: The javascript prototype to extend collections from (for example Backbone.Collection or Tornado.Collection)
+                                If you want to use collection.js this should be Tornado.FilteredCollection
         :param table_name: How we named the collection
         """
         super().initialize()
@@ -42,9 +48,14 @@ class BaseHandler(RequestHandler):
         self.api_url = api_url
         self.own_url = own_url
 
+        self.model_base = model_base
+        self.collection_base = collection_base
+
         self.hash = hashlib.md5()
         self.hash.update(self.api_url.encode("utf-8"))
         self.hash.update(self.own_url.encode("utf-8"))
+        self.hash.update(self.model_base.encode("utf-8"))
+        self.hash.update(self.collection_base.encode("utf-8"))
         self.hash.update(("%u" % pepper).encode("utf-8"))
 
     def compute_etag(self):
@@ -58,6 +69,8 @@ class BaseHandler(RequestHandler):
     def get(self, ftype=None):
         """
             GET request
+
+            :param ftype: Format Type (javascript or json)
         """
 
         # Code from us is pretty static
@@ -161,8 +174,8 @@ class BaseHandler(RequestHandler):
             self.write({cwargs["model"]: mwargs, '%sCollection' % cwargs["name"]: cwargs})
         else:
             self.set_header("Content-Type", "application/javascript; charset=UTF-8")
-            self.write('var %s = Tornado.Model.extend(%s);\n' % (cwargs["model"], json_encode(mwargs)))
-            self.write('var %sCollection = Tornado.Collection.extend(%s);\n' % (cwargs["name"], json_encode(cwargs)))
+            self.write('var %s = %s.extend(%s);\n' % (cwargs["model"], self.model_base, json_encode(mwargs)))
+            self.write('var %sCollection = %s.extend(%s);\n' % (cwargs["name"], self.collection_base, json_encode(cwargs)))
             self.write('%sCollection.prototype.model = %s;\n' % (cwargs["name"], cwargs["model"]))
             self.write('%s = new %sCollection();\n' % (self.table_name, cwargs["name"]))
 
