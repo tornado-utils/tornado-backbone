@@ -267,10 +267,16 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
          * @param op Operator
          */
         filterBy: function(key, value, op) {
+            var collection = this;
+
             if (!op) {
                 op = "eq";
             }
-            this.addFilter({'name': key, 'val': value, 'op': op});
+
+            collection.filters = _.reject(collection.filters, function (filter) {
+                return filter["key"] == key
+            });
+            collection.addFilter({'name': key, 'val': value, 'op': op});
         },
 
         /**
