@@ -210,9 +210,9 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             this.num_results = data.num_results || data.length;
             this.page = data.page || 1;
             if (this.num_results < this.models.length + objects.length) {
-                this.trigger("pagination.tornado", "load");
+                this.trigger("tb.pagination", "load");
             } else {
-                this.trigger("pagination.tornado", "complete");
+                this.trigger("tb.pagination", "complete");
             }
 
             return objects;
@@ -232,6 +232,9 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
          * Is this Collection fully loaded?
          */
         hasMore: function () {
+            if (!this.query) {
+                return Tornado.Collection.hasMore.apply(this);
+            }
             return this.results[this.query]['num_results'] < this.results[this.query]['objects'].length;
         },
 
@@ -256,7 +259,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
          */
         addFilter: function (filter) {
             this.filters.push(filter);
-            this.update(true);
+            this.update();
         },
 
         /**
@@ -274,7 +277,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             }
 
             collection.filters = _.reject(collection.filters, function (filter) {
-                return filter["key"] == key
+                return filter["name"] == key;
             });
             collection.addFilter({'name': key, 'val': value, 'op': op});
         },
@@ -306,7 +309,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
         isv: function (model) {
             var collection = this;
 
-            if (this.results[this.query]['objects'].indexOf(model) === -1) {
+            if (!this.contains(model)) {
                 return false;
             }
 
@@ -318,33 +321,39 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
                 var other = filter["val"] || model.get(filter["field"]);
                 var rtn;
 
-                if (filter["op"] in Tornado.Operator.equals) {
-                    rtn = value == other;
-                } else if (filter["op"] in Tornado.Operator.unequals) {
+                // Comparision between model & object is done by the idAttribute
+                if (other instanceof Backbone.Model && _.isObject(value)) {
+                    value = value[other.idAttribute];
+                    other = other.id;
+                }
+
+                if (_.contains(Tornado.Operator.equals, filter["op"])) {
+                    rtn = (value == other);
+                } else if (_.contains(Tornado.Operator.unequals, filter["op"])) {
                     rtn = value != other;
-                } else if (filter["op"] in Tornado.Operator.gt) {
+                } else if (_.contains(Tornado.Operator.gt, filter["op"])) {
                     rtn = value > other;
-                } else if (filter["op"] in Tornado.Operator.lt) {
+                } else if (_.contains(Tornado.Operator.lt, filter["op"])) {
                     rtn = value < other;
-                } else if (filter["op"] in Tornado.Operator.gte) {
+                } else if (_.contains(Tornado.Operator.gte, filter["op"])) {
                     rtn = value >= other;
-                } else if (filter["op"] in Tornado.Operator.lte) {
+                } else if (_.contains(Tornado.Operator.lte, filter["op"])) {
                     rtn = value <= other;
-                } else if (filter["op"] in Tornado.Operator.element_of) {
+                } else if (_.contains(Tornado.Operator.element_of, filter["op"])) {
                     rtn = value in other;
-                } else if (filter["op"] in Tornado.Operator.not_element_of) {
+                } else if (_.contains(Tornado.Operator.not_element_of, filter["op"])) {
                     rtn = !(value in other);
-                } else if (filter["op"] in Tornado.Operator.is_null) {
+                } else if (_.contains(Tornado.Operator.is_null, filter["op"])) {
                     rtn = !value;
-                } else if (filter["op"] in Tornado.Operator.is_not_null) {
+                } else if (_.contains(Tornado.Operator.is_not_null, filter["op"])) {
                     rtn = !!value
-                } else if (filter["op"] in Tornado.Operator.like) {
+                } else if (_.contains(Tornado.Operator.like, filter["op"])) {
                     // @TODO Implement this
                     throw "Unimplemented operator: " + filter["op"];
-                } else if (filter["op"] in Tornado.Operator.has) {
+                } else if (_.contains(Tornado.Operator.has, filter["op"])) {
                     // @TODO Implement this
                     throw "Unimplemented operator: " + filter["op"];
-                } else if (filter["op"] in Tornado.Operator.any) {
+                } else if (_.contains(Tornado.Operator.any, filter["op"])) {
                     // @TODO Implement this
                     throw "Unimplemented operator: " + filter["op"];
                 } else {
@@ -371,7 +380,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
                 collection.each(function (object) {
                     if (object.hidden !== false) {
                         if (collection.isv(object)) {
-                            object.trigger('show');
+                            object.trigger('show', object);
                             object.hidden = false;
                         }
                     }
@@ -383,7 +392,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
                 collection.each(function (object) {
                     if (object.hidden !== true) {
                         if (!collection.isv(object)) {
-                            object.trigger('hide');
+                            object.trigger('hide', object);
                             object.hidden = true;
                         }
                     }

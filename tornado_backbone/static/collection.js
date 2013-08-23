@@ -27,6 +27,20 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             this.template = _.template(this.$el.html().replace(/&lt;%/g, "<%").replace(/%&gt;/g, "%>"));
             this.$el.empty();
 
+            // Listen to model events
+            this.listenTo(this.collection, 'all', this.handleEvent);
+
+        },
+
+        handleEvent: function (event) {
+            var self = this,
+                collection = this.collection;
+
+            if ((event == "hide" || event == "show") && arguments[1]) {
+                var model = arguments[1];
+                var $el = self.$el.find("> [name='" + model.id + "']");
+                $el[event]();
+            }
         },
 
         render: function () {
@@ -56,11 +70,11 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             return self;
         },
 
-        filter: function (key, value, operator) {
+        search: function () {
             var self = this,
                 collection = this.collection;
 
-            this.collection.filterBy(key, value, operator);
+            // @TODO Implement this!
 
             return self;
         },
@@ -70,13 +84,13 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
                 collection = this.collection;
 
             collection.each(function (model) {
-                var $el = self.$el.find("> [name=" + model.cid + "]");
+                var $el = self.$el.find("> [name='" + model.id + "']");
                 if ($el.length == 0) {
-                    $el = self.$el.prepend(self.template(model.attributes));
-                } else {
-                    $el = $el.replaceWith(self.template(model.attributes));
+                    $el = $("<div></div>");
+                    $el.attr("name", model.id);
+                    self.$el.prepend($el);
                 }
-                $el.attr("name", model.cid);
+                $el.html(self.template(model.attributes));
             });
         },
 
@@ -148,6 +162,8 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
      * @param option
      */
     $.fn.tbcollection = function (option) {
+        var args = Array.prototype.slice.call(arguments, 1);
+
         return this.each(function () {
             var $this = $(this);
             var data = $this.data('tb.collection');
@@ -160,7 +176,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
                 $this.data('tb.collection').render();
             }
             if (typeof option == 'string') {
-                data[option]();
+                data[option].apply(data, args);
             }
         });
     };

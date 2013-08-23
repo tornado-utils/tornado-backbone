@@ -34,10 +34,11 @@ require(["jquery", "underscore", "backbone", "backbone_forms"],function ($, _, B
         handleFormEvent: function (event, form, node) {
             this.trigger(event, node || form || this);
 
-            // Retrigger events in a slighty different way
+            // Retrigger event under tb:* namespace
             var args = event.split(":");
             if (args.length > 1) {
-                this.trigger(args[1] + ".tornado." + args[0], [form, node], node);
+                this.trigger("tb:" + args[1], form, node);
+                this.trigger("tb:" + args[1] + ":" + args[0], form, node);
             }
         },
 
@@ -155,6 +156,8 @@ require(["jquery", "underscore", "backbone", "backbone_forms"],function ($, _, B
      * @param option
      */
     $.fn.tbform = function (option) {
+        var args = Array.prototype.slice.call(arguments, 1);
+
         return this.each(function () {
             var $this = $(this);
             var data = $this.data('tb.form');
@@ -167,7 +170,7 @@ require(["jquery", "underscore", "backbone", "backbone_forms"],function ($, _, B
                 $this.data('tb.form').render();
             }
             if (typeof option == 'string') {
-                data[option]();
+                data[option].apply(data, args);
             }
         });
     };
