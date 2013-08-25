@@ -182,7 +182,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
     Tornado.Collection = Backbone.Collection.extend({
 
         // Objects on page
-        page: 1,
+        page: 0,
         page_length: 25,
         num_results: null,
 
@@ -194,12 +194,16 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
         },
 
         /**
-         * Load more
+         * Multiple call of fetch will increase in page count
          */
-        fetchMore: function () {
-            if (self.hasMore()) {
-                // @TODO Implement
-            }
+        fetch: function (options) {
+            var collection = this;
+
+            options = options ? _.clone(options) : {};
+            options.data = options.data ? options.data : {};
+            options.data["page"] = options.reset || !collection.page ? undefined : collection.page + 1;
+
+            return Backbone.Collection.prototype.fetch.call(collection, options);
         },
 
         // parse data from server
@@ -229,286 +233,72 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
     Tornado.FilteredCollection = Tornado.Collection.extend({
 
         /**
-         * Is this Collection fully loaded?
-         */
-        hasMore: function () {
-            if (!this.query) {
-                return Tornado.Collection.hasMore.apply(this);
-            }
-            return this.results[this.query]['num_results'] < this.results[this.query]['objects'].length;
-        },
-
-        /**
-         * Load more
-         *
-         * @TODO offset is visible count (because of filters)
-         */
-        fetchMore: function () {
-            if (this.hasMore()) {
-                this.getResults(this.query, this.results[this.query]['objects'].length);
-            }
-        },
-
-        /**
          * List of applied filters
          */
         filters: [],
 
         /**
-         * apply a filter
-         */
-        addFilter: function (filter) {
-            this.filters.push(filter);
-            this.update();
-        },
-
-        /**
-         * filterBy value that looks like sqlalchemy (or not ...)
+         * Apply a filter
          *
-         * @param key Key
-         * @param value Value
-         * @param op Operator
+         * filter: [list|object]: The filter
+         * [update]: Update an existing filter with key
          */
-        filterBy: function(key, value, op) {
+        filterBy: function (filter, update) {
             var collection = this;
 
-            if (!op) {
-                op = "eq";
+            if (_.isArray(filter)) {
+                if (filter.length > 2) {
+                    filter = {'name': filter[0], 'op': filter[1], 'val': filter[2]};
+                } else {
+                    filter = {'name': filter[0], 'val': filter[2]};
+                }
+            } else if (_.isString(filter)) {
+                filter = {'name': arguments[0], 'op': arguments[1], 'val': arguments[2]};
+                update = arguments[3];
             }
 
-            collection.filters = _.reject(collection.filters, function (filter) {
-                return filter["name"] == key;
-            });
-            collection.addFilter({'name': key, 'val': value, 'op': op});
+            _.defaults(filter, {'op': 'eq'});
+
+            if (update) {
+                collection.filters = _.reject(collection.filters, function (f) {
+                    return f.name == filter['name']
+                });
+            }
+            collection.filters.push(filter);
+            collection.fetch({reset: true});
         },
 
         /**
-         * remove a filter
+         * Remove a filter
          *
-         * @param filter Filter to be removed
-         * @returns filter
+         * filter: [list|object|string]: The filter
          */
         removeFilter: function (filter) {
-            var pos = this.filters.indexOf(filter);
-            if (pos >= 0) {
-                var rtn = this.filters.splice(pos, 1);
-                if (rtn.length > 0) {
-                    this.update(false);
-                }
-                return rtn[0];
+            var collection = this;
+
+            if (_.isString(filter)) {
+                collection.filters = _.reject(collection.filters, function (f) {
+                    return f.name == filter
+                });
             } else {
-                return null;
+                collection.filters = _.reject(collection.filters, function (f) {
+                    return f == filter
+                });
             }
+            collection.fetch({reset: true});
         },
 
         /**
-         * Is the model visible according current filters?
-         *
-         * @param model
+         * Augment Fetch with all information
          */
-        isv: function (model) {
+        fetch: function (options) {
             var collection = this;
 
-            if (!this.contains(model)) {
-                return false;
-            }
+            options = options ? _.clone(options) : {};
+            options.data = options.data ? options.data : {};
+            options.data["q"] = JSON.stringify({"filters": collection.filters});
 
-            var i, l, filter;
-            for (i = 0, l = collection.filters.length; i < l; i++) {
-                filter = collection.filters[i];
-
-                var value = model.get(filter["name"]);
-                var other = filter["val"] || model.get(filter["field"]);
-                var rtn;
-
-                // Comparision between model & object is done by the idAttribute
-                if (other instanceof Backbone.Model && _.isObject(value)) {
-                    value = value[other.idAttribute];
-                    other = other.id;
-                }
-
-                if (_.contains(Tornado.Operator.equals, filter["op"])) {
-                    rtn = (value == other);
-                } else if (_.contains(Tornado.Operator.unequals, filter["op"])) {
-                    rtn = value != other;
-                } else if (_.contains(Tornado.Operator.gt, filter["op"])) {
-                    rtn = value > other;
-                } else if (_.contains(Tornado.Operator.lt, filter["op"])) {
-                    rtn = value < other;
-                } else if (_.contains(Tornado.Operator.gte, filter["op"])) {
-                    rtn = value >= other;
-                } else if (_.contains(Tornado.Operator.lte, filter["op"])) {
-                    rtn = value <= other;
-                } else if (_.contains(Tornado.Operator.element_of, filter["op"])) {
-                    rtn = value in other;
-                } else if (_.contains(Tornado.Operator.not_element_of, filter["op"])) {
-                    rtn = !(value in other);
-                } else if (_.contains(Tornado.Operator.is_null, filter["op"])) {
-                    rtn = !value;
-                } else if (_.contains(Tornado.Operator.is_not_null, filter["op"])) {
-                    rtn = !!value
-                } else if (_.contains(Tornado.Operator.like, filter["op"])) {
-                    // @TODO Implement this
-                    throw "Unimplemented operator: " + filter["op"];
-                } else if (_.contains(Tornado.Operator.has, filter["op"])) {
-                    // @TODO Implement this
-                    throw "Unimplemented operator: " + filter["op"];
-                } else if (_.contains(Tornado.Operator.any, filter["op"])) {
-                    // @TODO Implement this
-                    throw "Unimplemented operator: " + filter["op"];
-                } else {
-                    throw "Unexpected operator: " + filter["op"];
-                }
-
-                if (!rtn) {
-                    return false;
-                }
-            }
-
-            return true;
-        },
-
-        /**
-         * Update visibility
-         * @param vis
-         */
-        update: function (vis) {
-            var collection = this;
-
-            // Show hidden elements if they do not match a filter
-            if (vis === true || vis !== false) {
-                collection.each(function (object) {
-                    if (object.hidden !== false) {
-                        if (collection.isv(object)) {
-                            object.trigger('show', object);
-                            object.hidden = false;
-                        }
-                    }
-                });
-            }
-
-            // Hide visible elements if they match a filter
-            if (vis === false || vis !== true) {
-                collection.each(function (object) {
-                    if (object.hidden !== true) {
-                        if (!collection.isv(object)) {
-                            object.trigger('hide', object);
-                            object.hidden = true;
-                        }
-                    }
-                });
-            }
-
-        },
-
-        /**
-         * Cache of results
-         */
-        results: {},
-
-        /**
-         * Get the result list for a query
-         * @param search
-         * @param [offset]
-         * @returns {$.Deferred}
-         */
-        getResults: function (search, offset) {
-            var dfd = new $.Deferred();
-            var collection = this;
-
-            // Check whether this query was already asked
-            if (self.results[search]) {
-                dfd.resolve({'results': self.results[search]['objects']});
-                return dfd;
-            }
-
-            // Create it
-            var results = self.results[search] = {'num_results': null, 'objects': []};
-            var query = {"search": search, "filters": collection.filters};
-
-            // Apply an offset
-            if (offset) {
-                query["offset"] = offset;
-            }
-
-            // Fetch Objects
-            this.curl(query).done(function (objects, num_results) {
-                results['num_results'] = num_results;
-                results['objects'].push.apply(results['objects'], objects.map(function (object) {
-                    collection.add(object)
-                }));
-                dfd.resolve({'results': results['objects']});
-            }).fail(function (jqXHR, textStatus, errorThrown) {
-                    dfd.reject(jqXHR, textStatus, errorThrown);
-                });
-
-            return dfd;
-        },
-
-        /**
-         * Wrapper for ajax query
-         * @param query
-         * @returns {jQuery.Deferred}
-         */
-        curl: function (query) {
-            var dfd = new jQuery.Deferred();
-
-            Backbone.ajax({
-                url: this.url,
-                data: {"q": JSON.stringify(query)},
-                dataType: "json",
-                contentType: "application/json",
-                success: function (data) {
-                    dfd.resolve(data.objects || data, data.num_results || data.length)
-                },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    dfd.reject(jqXHR, textStatus, errorThrown);
-                }
-            });
-            return dfd;
-        },
-
-        /**
-         * Actually running query
-         */
-        query: null,
-
-        /**
-         * Do a search
-         *
-         * @param search search query
-         * @returns {jQuery.Deferred}
-         */
-        doSearch: function (search) {
-            var dfd = new jQuery.Deferred();
-            var collection = this;
-
-            // Store query
-            collection.query = search;
-
-            // Ask the search engine for the results
-            self.getResults(search).done(function (objects) {
-                // Scan which objects need to be resolved and which to be hidden
-                var i, l, p, object;
-                collection.each(function (object) {
-                    object.hidden = object.hidden || 'a';
-                });
-                for (i = 0, l = objects.length, p = self.page_length; i < l && i < p; i++) {
-                    object = self.get(objects[i]);
-                    object.trigger('show');
-                    object.hidden = false;
-                }
-                collection.each(function (object) {
-                    if (object.hidden == 'a') {
-                        object.trigger('hide');
-                        object.hidden = true;
-                    }
-                });
-            }).fail(function (jqXHR, textStatus, errorThrown) {
-                    dfd.reject(jqXHR, textStatus, errorThrown);
-                });
-
-            return dfd;
+            return Tornado.Collection.prototype.fetch.call(collection, options);
         }
 
     });
