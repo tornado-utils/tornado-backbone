@@ -241,9 +241,10 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
          * Apply a filter
          *
          * filter: [list|object]: The filter
-         * [update]: Update an existing filter with key
+         * [options]: update: Update an existing filter
+         *            nofetch: Do not fetch collection (useful for bulk updating)
          */
-        filterBy: function (filter, update) {
+        filterBy: function (filter, options) {
             var collection = this;
 
             if (_.isArray(filter)) {
@@ -254,26 +255,29 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
                 }
             } else if (_.isString(filter)) {
                 filter = {'name': arguments[0], 'op': arguments[1], 'val': arguments[2]};
-                update = arguments[3];
+                options = arguments[3];
             }
 
             _.defaults(filter, {'op': 'eq'});
 
-            if (update) {
+            if (options.update) {
                 collection.filters = _.reject(collection.filters, function (f) {
                     return f.name == filter['name']
                 });
             }
             collection.filters.push(filter);
-            collection.fetch({reset: true});
+            if (!options.nofetch) {
+                collection.fetch({reset: true});
+            }
         },
 
         /**
          * Remove a filter
          *
          * filter: [list|object|string]: The filter
+         * [options]: nofetch: Do not fetch collection (useful for bulk updating)
          */
-        removeFilter: function (filter) {
+        removeFilter: function (filter, options) {
             var collection = this;
 
             if (_.isString(filter)) {
@@ -285,7 +289,9 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
                     return f == filter
                 });
             }
-            collection.fetch({reset: true});
+            if (!options.nofetch) {
+                collection.fetch({reset: true});
+            }
         },
 
         /**
