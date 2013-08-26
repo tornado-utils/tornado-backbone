@@ -23,8 +23,8 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
                 }
             }
 
-            // Create Template (@TODO there must be something better than backplacing the escaped <%= %> tags)
-            this.template = _.template(this.$el.html().replace(/&lt;%/g, "<%").replace(/%&gt;/g, "%>"));
+            // Create Template (@TODO there must be something better than unescaping the escaped < & > tags)
+            this.template = _.template(this.$el.html().replace(/&lt;/g, "<").replace(/&gt;/g, ">"));
             this.$el.empty();
 
             // Listen to model events
@@ -41,15 +41,21 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
                 var $el = self.$el.find("> [name='" + model.id + "']");
                 $el[event]();
             }
+
+            if (event == "reset") {
+                this.$el.empty();
+                this.render({reset: true});
+            }
         },
 
-        render: function () {
+        render: function (options) {
             var $el = this.$el,
-                options = this.options,
                 self = this,
                 collection = this.collection;
 
-            if (collection.length > 0) {
+            options = _.extend(this.options, options || {});
+
+            if (collection.length > 0 || options.reset) {
                 self.renderElements(options);
                 self.renderFooter(options);
             } else {
