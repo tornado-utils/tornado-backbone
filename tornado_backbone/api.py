@@ -3,11 +3,9 @@
 """
 
 """
-import time
 from tornado.web import Application, URLSpec
 
-from . import handler
-from .handler.BaseHandler import BaseHandler
+from .handler import BaseHandler
 
 __author__ = 'Martin Martimeo <martin@martimeo.de>'
 __date__ = '26.04.13 - 22:25'
@@ -62,7 +60,7 @@ class ApiManager(object):
                                     * None: the url can be suffiexed with .json
                                     * False: the url may not be suffiexed with .json
         :param handler_class: The Handler Class that will be registered
-        :type handler_class: :class:`handler.BaseHandler`
+        :type handler_class: :class:`handler.handler`
         :return: :class:`tornado.web.URLSpec`
         :raise: IllegalArgumentError
         """
@@ -113,12 +111,3 @@ class ApiManager(object):
             self.application.add_handlers(virtualhost, [blueprint])
 
         self.application.named_handlers[blueprint.name] = blueprint
-
-    @staticmethod
-    def invalidate():
-        """
-            Tornado Backbone aggresivly set and checks etag based
-
-            use this function to invalidate all existing etags
-        """
-        handler._pepper = time.time()

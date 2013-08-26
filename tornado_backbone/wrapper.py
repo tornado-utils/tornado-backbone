@@ -79,7 +79,8 @@ class ModelWrapper(object):
             :param instance: Model ORM Instance
         """
         return _filter(instance, lambda field: isinstance(field, ColumnProperty) and field.primary_key or (
-            isinstance(field, QueryableAttribute) and isinstance(field.property, ColumnProperty) and field.property.columns[0].primary_key))
+            isinstance(field, QueryableAttribute) and isinstance(field.property, ColumnProperty) and
+            field.property.columns[0].primary_key))
 
     @memoized_property
     def primary_keys(self):
@@ -98,7 +99,8 @@ class ModelWrapper(object):
             :param instance: Model ORM Instance
         """
         return _filter(instance, lambda field: isinstance(field, ColumnProperty) and field.unique or (
-            isinstance(field, QueryableAttribute) and isinstance(field.property, ColumnProperty) and field.property.columns[0].unique))
+            isinstance(field, QueryableAttribute) and isinstance(field.property, ColumnProperty) and
+            field.property.columns[0].unique))
 
     @memoized_property
     def unique_keys(self):

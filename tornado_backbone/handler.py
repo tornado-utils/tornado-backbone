@@ -4,13 +4,15 @@
 
 """
 import hashlib
+import time
+
 from sqlalchemy.types import Integer, Numeric, String, Date, DateTime, Time
 from sqlalchemy.orm.interfaces import MANYTOMANY, MANYTOONE, ONETOMANY
 from tornado.escape import json_encode
 from tornado.web import RequestHandler
 
-from ..helper.ModelWrapper import ModelWrapper
-from . import _pepper as pepper
+from .wrapper import ModelWrapper
+
 
 __author__ = 'Martin Martimeo <martin@martimeo.de>'
 __date__ = '26.04.13 - 22:09'
@@ -56,7 +58,18 @@ class BaseHandler(RequestHandler):
         self.hash.update(self.own_url.encode("utf-8"))
         self.hash.update(self.model_base.encode("utf-8"))
         self.hash.update(self.collection_base.encode("utf-8"))
-        self.hash.update(("%u" % pepper).encode("utf-8"))
+        self.hash.update(("%u" % self._pepper).encode("utf-8"))
+
+    _pepper = time.time()
+
+    @classmethod
+    def invalidate(cls):
+        """
+            Tornado Backbone aggresivly set and checks etag based on a _pepper attribute of handler
+
+            use this function to invalidate all existing etags
+        """
+        cls._pepper = time.time()
 
     def compute_etag(self):
         """
@@ -175,7 +188,8 @@ class BaseHandler(RequestHandler):
         else:
             self.set_header("Content-Type", "application/javascript; charset=UTF-8")
             self.write('var %s = %s.extend(%s);\n' % (cwargs["model"], self.model_base, json_encode(mwargs)))
-            self.write('var %sCollection = %s.extend(%s);\n' % (cwargs["name"], self.collection_base, json_encode(cwargs)))
+            self.write(
+                'var %sCollection = %s.extend(%s);\n' % (cwargs["name"], self.collection_base, json_encode(cwargs)))
             self.write('%sCollection.prototype.model = %s;\n' % (cwargs["name"], cwargs["model"]))
             self.write('%s = new %sCollection();\n' % (self.table_name, cwargs["name"]))
 
