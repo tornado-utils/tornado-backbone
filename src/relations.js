@@ -6,7 +6,7 @@
  * Extension to backbone_relations
  */
 
-require(["jquery", "underscore", "backbone", "backbone_relational"],function ($, _, Backbone, BackboneRelation) {
+require(["jquery", "underscore", "backbone", "backbone-relational"],function ($, _, Backbone, BackboneRelation) {
     var self = this.Tornado || {};
     var Tornado = this.Tornado = self;
 

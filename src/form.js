@@ -3,10 +3,10 @@
  * Date: 13.08.13
  * Time: 18:30
  *
- * Extension to backbone_forms
+ * Extension to backbone-forms
  */
 
-require(["jquery", "underscore", "backbone", "backbone_forms"],function ($, _, Backbone) {
+require(["jquery", "underscore", "backbone", "backbone-forms"],function ($, _, Backbone) {
     var self = this.Tornado || {};
     var Tornado = this.Tornado = self;
 
