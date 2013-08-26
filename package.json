@@ -4,7 +4,7 @@
     "author": {
         "name": "Martin Martimeo"
     },
-    "version": "0.2.0",
+    "version": "0.2.1",
     "dependencies": {
         "backbone": ">=1.0.0",
         "backbone-forms": ">=0.12.0",
