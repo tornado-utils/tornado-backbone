@@ -14,7 +14,7 @@ Development Status
 ==================
 
 The implementation is currently still a bleeding edge without many documentation,
-but I hope to provide a meaningful documentation and release soon.
+but I hope to provide a meaningful documentation soon.
 
 require
 =======
@@ -28,7 +28,8 @@ The shim we use in production looks like:
         paths: {
             underscore: "{{ handler.request.method }}://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min",
             backbone: "{{ handler.request.method }}://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.0.0/backbone-min",
-            backbone_forms: "{{ handler.request.method }}://cdnjs.cloudflare.com/ajax/libs/backbone-forms/0.12.0/backbone-forms"
+            "backbone-forms": "{{ handler.request.method }}://cdnjs.cloudflare.com/ajax/libs/backbone-forms/0.12.0/backbone-forms",
+            "backbone-relational": "{{ handler.request.method }}://cdnjs.cloudflare.com/ajax/libs/backbone-relational/0.8.5/backbone-relational"
         },
         shim: {
             underscore: {
@@ -38,7 +39,7 @@ The shim we use in production looks like:
                 deps: ["underscore", "jquery"],
                 exports: "Backbone"
             },
-            backbone_forms: {
+            "backbone-forms": {
                 deps: ["backbone"]
             }
         }
@@ -48,7 +49,7 @@ The shim we use in production looks like:
 backbone-forms
 ==============
 
-If you want to have support for backbone-forms include the `tbf.js`.
+If you want to have support for backbone-forms include the `form.js`.
 Tornado Backbone exposes all information of the `info` dict as schema attribute in the backbone model
  and falls back on some defaults if there is no information (like for integer).
 For interaction with backbone-forms you can define for example your column like:
@@ -101,7 +102,7 @@ backbone-relations
 ==================
 
 Tornado Backbone exposes relations in a backbone-relations compatible way.
-If you include `tbr.js` in your project all models will be based on Backbone.RelationalModel
+If you include `relations.js` in your project all models will be based on Backbone.RelationalModel
 
 Copyright license
 =================
@@ -111,9 +112,9 @@ tornado-backbone is licensed under the GNU Affero General Public License, for mo
 Installing
 ==========
 
-tornado-backbone was developed under python3.3, sqlalchemy0.8 and tornado3.0
+tornado-backbone was developed under python3.3, sqlalchemy0.9 and tornado3.1
 
-It may work with previous python3.X versions and sqlalchemy 2.7 (and maybe even with python2.7) but I did not test it at all.
+It may work with sqlalchemy 0.8 and older tornado releases but I did not test it at all.
 
 To install this libary as an egg use:
 

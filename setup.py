@@ -10,7 +10,7 @@ from distutils.core import setup
 
 setup(
     name='Tornado-Backbone',
-    version='0.1.1',
+    version='0.2.0',
     author='Martin Martimeo',
     author_email='martin@martimeo.de',
     url='https://github.com/MartinMartimeo/tornado-backbone',
@@ -22,7 +22,7 @@ setup(
     install_requires=open('requirements.txt').readlines(),
     download_url='http://pypi.python.org/pypi/Tornado-Backbone',
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
         'License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)',
         'Operating System :: OS Independent',
