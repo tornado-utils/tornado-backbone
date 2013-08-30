@@ -7,6 +7,7 @@ import hashlib
 import time
 
 from sqlalchemy.types import Integer, Numeric, String, Date, DateTime, Time
+from sqlalchemy.sql.selectable import Join
 from sqlalchemy.orm.interfaces import MANYTOMANY, MANYTOONE, ONETOMANY
 from tornado.escape import json_encode
 from tornado.web import RequestHandler
@@ -162,24 +163,29 @@ class BaseHandler(RequestHandler):
 
             # Model & Collection
             target = relation.property.target
-            relation_info.setdefault('relatedModel', "%sModel" % target.__collectionname__)
-            relation_info.setdefault('collectionType', "%sCollection" % target.__collectionname__)
-
-            # HasMany / HasOne
-            relation_info.setdefault('reverseRelation', {})
-            if relation.property.direction is MANYTOMANY or relation.property.direction is ONETOMANY:
-                relation_info.setdefault('type', 'HasMany')
-                mwargs['schema'].setdefault(relation_key, {}).update(
-                    {'type': 'List', 'itemType': 'NestedModel', 'model': '%sModel' % target.__collectionname__})
+            if isinstance(target, Join):
+                # TODO: Find out what we can do here!
+                pass
             else:
-                relation_info.setdefault('type', 'HasOne')
-                mwargs['schema'].setdefault(relation_key, {}).update(
-                    {'type': 'Select', 'collection': '%sCollection' % target.__collectionname__})
+                relation_info.setdefault('relatedModel', "%sModel" % target.__collectionname__)
+                relation_info.setdefault('collectionType', "%sCollection" % target.__collectionname__)
 
-            if relation.property.direction is MANYTOMANY or relation.property.direction is MANYTOONE:
-                relation_info['reverseRelation'].setdefault('type', 'HasMany')
-            else:
-                relation_info['reverseRelation'].setdefault('type', 'HasOne')
+                # HasMany / HasOne
+                relation_info.setdefault('reverseRelation', {})
+                if relation.property.direction is MANYTOMANY or relation.property.direction is ONETOMANY:
+                    relation_info.setdefault('type', 'HasMany')
+                    mwargs['schema'].setdefault(relation_key, {}).update(
+                        {'type': 'List', 'itemType': 'NestedModel', 'model': '%sModel' % target.__collectionname__})
+                else:
+                    relation_info.setdefault('type', 'HasOne')
+                    mwargs['schema'].setdefault(relation_key, {}).update(
+                        {'type': 'Select', 'collection': '%sCollection' % target.__collectionname__})
+
+                if relation.property.direction is MANYTOMANY or relation.property.direction is MANYTOONE:
+                    relation_info['reverseRelation'].setdefault('type', 'HasMany')
+                else:
+                    relation_info['reverseRelation'].setdefault('type', 'HasOne')
+
             mwargs['relations'].append(relation_info)
 
         if ftype == "json":
