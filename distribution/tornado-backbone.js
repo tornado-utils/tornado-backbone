@@ -523,10 +523,10 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
  * Date: 13.08.13
  * Time: 18:30
  *
- * Extension to backbone_forms
+ * Extension to backbone-forms
  */
 
-require(["jquery", "underscore", "backbone", "../."],function ($, _, Backbone) {
+require(["jquery", "underscore", "backbone", "backbone-forms"],function ($, _, Backbone) {
     var self = this.Tornado || {};
     var Tornado = this.Tornado = self;
 
@@ -627,7 +627,7 @@ require(["jquery", "underscore", "backbone", "../."],function ($, _, Backbone) {
                     // Update editor Attrs
                     field.schema.editorAttrs = field.schema.editorAttrs || {};
                     field.schema.editorAttrs = _.extend(field.schema.editorAttrs, $container.data("editorAttrs"));
-                    $el.find("[data-editor] input").attr(field.schema.editorAttrs);
+                    field.editor.$el.attr(field.schema.editorAttrs);
 
                 });
 
@@ -653,7 +653,7 @@ require(["jquery", "underscore", "backbone", "../."],function ($, _, Backbone) {
                     // Update editor Attrs
                     fieldset.schema.editorAttrs = fieldset.schema.editorAttrs || {};
                     fieldset.schema.editorAttrs = _.extend(fieldset.schema.editorAttrs, $container.data("editorAttrs"));
-                    $el.find("[data-editor] input").attr(fieldset.schema.editorAttrs);
+                    fieldset.editor.$el.find("[data-editor] input").attr(fieldset.schema.editorAttrs);
                 });
 
                 $container.removeAttr('data-fieldsets');
@@ -720,7 +720,7 @@ require(["jquery", "underscore", "backbone", "../."],function ($, _, Backbone) {
  * Extension to backbone_relations
  */
 
-require(["jquery", "underscore", "backbone", "backbone_relational"],function ($, _, Backbone, BackboneRelation) {
+require(["jquery", "underscore", "backbone", "backbone-relational"],function ($, _, Backbone, BackboneRelation) {
     var self = this.Tornado || {};
     var Tornado = this.Tornado = self;
 
