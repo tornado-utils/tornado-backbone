@@ -26,10 +26,10 @@ The shim we use in production looks like:
     require.config({
         baseUrl: '/static/',
         paths: {
-            underscore: "{{ handler.request.method }}://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min",
-            backbone: "{{ handler.request.method }}://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.0.0/backbone-min",
-            "backbone-forms": "{{ handler.request.method }}://cdnjs.cloudflare.com/ajax/libs/backbone-forms/0.12.0/backbone-forms",
-            "backbone-relational": "{{ handler.request.method }}://cdnjs.cloudflare.com/ajax/libs/backbone-relational/0.8.5/backbone-relational"
+            underscore: "{{ handler.request.protocol }}://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min",
+            backbone: "{{ handler.request.protocol }}://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.0.0/backbone-min",
+            "backbone-forms": "{{ handler.request.protocol }}://cdnjs.cloudflare.com/ajax/libs/backbone-forms/0.12.0/backbone-forms",
+            "backbone-relational": "{{ handler.request.protocol }}://cdnjs.cloudflare.com/ajax/libs/backbone-relational/0.8.5/backbone-relational"
         },
         shim: {
             underscore: {
