@@ -41,6 +41,9 @@ The shim we use in production looks like:
             },
             "backbone-forms": {
                 deps: ["backbone"]
+            },
+            "backbone-relational": {
+                deps: ["backbone"]
             }
         }
     });
