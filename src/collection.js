@@ -33,8 +33,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
         },
 
         handleEvent: function (event) {
-            var self = this,
-                collection = this.collection;
+            var self = this;
 
             if ((event == "hide" || event == "show") && arguments[1]) {
                 var model = arguments[1];
@@ -76,15 +75,6 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             return self;
         },
 
-        search: function () {
-            var self = this,
-                collection = this.collection;
-
-            // @TODO Implement this!
-
-            return self;
-        },
-
         renderElements: function (options) {
             var self = this,
                 collection = this.collection;
@@ -111,9 +101,9 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
                 collection = this.collection;
 
             var info = {
-                page: this.collection.page || 1,
-                page_length: this.collection.page_length,
-                pages: Math.ceil(this.collection.num_results / this.collection.page_length)
+                page: collection.page || 1,
+                page_length: collection.page_length,
+                total_pages: collection.total_pages || 0
             };
 
             var $footer = self.$el.find("footer");
@@ -130,10 +120,10 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
                 $footer.find(".btn-fast-backward").addClass("disabled");
             }
 
-            if (info.page > info.total - 2) {
+            if (info.page >= info.total_pages) {
                 $footer.find(".btn-fast-forward").addClass("disabled");
                 $footer.find(".btn-step-forward").addClass("disabled");
-            } else if (info.page > info.total - 3) {
+            } else if (info.page > info.total_pages) {
                 $footer.find(".btn-fast-forward").addClass("disabled");
             }
         }
@@ -151,11 +141,11 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
               <% if (page > 3) { %><a class="btn btn-page btn-page-number"><%= (page-2) %></a><% } %>\
               <% if (page > 2) { %><a class="btn btn-page btn-page-number"><%= (page-1) %></a><% } %>\
               <a class="btn btn-page btn-page-number btn-page-active"><%= page %></a>\
-              <% if (page < pages-1) { %><a class="btn btn-page btn-page-number"><%= (page+1) %></a><% } %>\
-              <% if (page < pages-2) { %><a class="btn btn-page btn-page-number"><%= (page+2) %></a><% } %>\
-              <% if (page == pages-3) { %><a class="btn btn-page btn-page-number"><%= (pages-1) %></a><% } %>\
-              <% if (page <= pages-4) { %><span class="btn btn-page btn-page-ellipses">...</span><% } %>\
-              <% if (page < pages) { %><a class="btn btn-page btn-page-number"><%= (pages) %></a><% } %>\
+              <% if (page < total_pages-1) { %><a class="btn btn-page btn-page-number"><%= (total_pages+1) %></a><% } %>\
+              <% if (page < total_pages-2) { %><a class="btn btn-page btn-page-number"><%= (total_pages+2) %></a><% } %>\
+              <% if (page == total_pages-3) { %><a class="btn btn-page btn-page-number"><%= (total_pages-1) %></a><% } %>\
+              <% if (page <= total_pages-4) { %><span class="btn btn-page btn-page-ellipses">...</span><% } %>\
+              <% if (page < total_pages) { %><a class="btn btn-page btn-page-number"><%= (total_pages) %></a><% } %>\
               <a class="btn btn-page btn-step-forward"><i class="glyphicon glyphicon-step-forward"></i></a>\
               <a class="btn btn-page btn-fast-forward"><i class="glyphicon glyphicon-fast-forward"></i></a>\
             </footer>\
