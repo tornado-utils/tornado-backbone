@@ -213,6 +213,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
 
             this.num_results = data.num_results || data.length;
             this.page = data.page || 1;
+            this.total_pages = data.total_pages || 0;
             if (this.num_results < this.models.length + objects.length) {
                 this.trigger("tb.pagination", "load");
             } else {
