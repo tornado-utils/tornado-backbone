@@ -620,6 +620,9 @@ require(["jquery", "underscore", "backbone", "backbone-forms"],function ($, _, B
                     field.schema.editorAttrs = _.extend(field.schema.editorAttrs, $container.data("editorAttrs"));
                     field.editor.$el.attr(field.schema.editorAttrs);
 
+                    // Add custom editor Class
+                    field.editor.$el.addClass($container.data("editorClass"));
+
                 });
 
                 $container.removeAttr('data-fields');
@@ -645,6 +648,9 @@ require(["jquery", "underscore", "backbone", "backbone-forms"],function ($, _, B
                     fieldset.schema.editorAttrs = fieldset.schema.editorAttrs || {};
                     fieldset.schema.editorAttrs = _.extend(fieldset.schema.editorAttrs, $container.data("editorAttrs"));
                     fieldset.editor.$el.find("[data-editor] input").attr(fieldset.schema.editorAttrs);
+
+                    // Add custom editor Class
+                    fieldset.editor.$el.addClass($container.data("editorClass"));
                 });
 
                 $container.removeAttr('data-fieldsets');
