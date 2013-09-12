@@ -52,6 +52,10 @@ The shim we use in production looks like:
 backbone-forms
 ==============
 
+A version of Backbone-Forms is included in the distribution folder, a copy of it can be
+obtained from https://github.com/powmedia/backbone-forms . Note that you must include the list
+editor as soon as you use relationship properties.
+
 If you want to have support for backbone-forms include the `form.js`.
 Tornado Backbone exposes all information of the `info` dict as schema attribute in the backbone model
  and falls back on some defaults if there is no information (like for integer).
