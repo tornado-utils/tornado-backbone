@@ -7,7 +7,7 @@ import hashlib
 import time
 
 from sqlalchemy.types import Integer, Numeric, String, Date, DateTime, Time
-from sqlalchemy.sql.selectable import Join
+from sqlalchemy.sql import Join
 from sqlalchemy.orm.interfaces import MANYTOMANY, MANYTOONE, ONETOMANY
 from tornado.escape import json_encode
 from tornado.web import RequestHandler
