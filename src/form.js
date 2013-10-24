@@ -122,7 +122,9 @@ require(["jquery", "underscore", "backbone", "backbone-forms"],function ($, _, B
                 var $container = $(el),
                     selection = $container.data('fieldsets');
 
-                if (_.isUndefined(selection)) return;
+                if (_.isUndefined(selection)) {
+                    return;
+                }
 
                 _.each(self.fieldsets, function (fieldset) {
 

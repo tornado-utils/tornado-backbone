@@ -201,6 +201,9 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
 
             options = options ? _.clone(options) : {};
             options.data = options.data ? options.data : {};
+            if (this.page_length) {
+                options.data["results_per_page"] = this.page_length;
+            }
             options.data["page"] = options.reset || !collection.page ? undefined : collection.page + 1;
 
             return Backbone.Collection.prototype.fetch.call(collection, options);
@@ -633,7 +636,9 @@ require(["jquery", "underscore", "backbone", "backbone-forms"],function ($, _, B
                 var $container = $(el),
                     selection = $container.data('fieldsets');
 
-                if (_.isUndefined(selection)) return;
+                if (_.isUndefined(selection)) {
+                    return;
+                }
 
                 _.each(self.fieldsets, function (fieldset) {
 

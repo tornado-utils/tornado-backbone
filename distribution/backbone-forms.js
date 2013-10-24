@@ -74,10 +74,10 @@ var Form = Backbone.View.extend({
 
     //Override defaults
     var constructor = this.constructor;
-    this.template = options.template || constructor.template;
-    this.Fieldset = options.Fieldset || constructor.Fieldset;
-    this.Field = options.Field || constructor.Field;
-    this.NestedField = options.NestedField || constructor.NestedField;
+    this.template = options.template || this.template || constructor.template;
+    this.Fieldset = options.Fieldset || this.Fieldset || constructor.Fieldset;
+    this.Field = options.Field || this.Field || constructor.Field;
+    this.NestedField = options.NestedField || this.NestedField || constructor.NestedField;
 
     //Check which fields will be included (defaults to all)
     var selectedFields = this.selectedFields = options.fields || _.keys(schema);
@@ -161,7 +161,7 @@ var Form = Backbone.View.extend({
     //Re-trigger editor events on the form
     var formEvent = editor.key+':'+event;
 
-    this.trigger.call(this, formEvent, this, editor);
+    this.trigger.call(this, formEvent, this, editor, Array.prototype.slice.call(arguments, 2));
 
     //Trigger additional events
     switch (event) {
@@ -1618,9 +1618,10 @@ Form.editors.Select = Form.editors.Base.extend({
 
   /**
    * Adds the <option> html to the DOM
-   * @param {Mixed}   Options as a simple array e.g. ['option1', 'option2']
-   *                      or as an array of objects e.g. [{val: 543, label: 'Title for object 543'}]
-   *                      or as a string of <option> HTML to insert into the <select>
+   * @param {Mixed} options   Options as a simple array e.g. ['option1', 'option2']
+   *                          or as an array of objects e.g. [{val: 543, label: 'Title for object 543'}]
+   *                          or as a string of <option> HTML to insert into the <select>
+   *                          or any object
    */
   renderOptions: function (options) {
       var $select = this.$el,
@@ -1655,11 +1656,15 @@ Form.editors.Select = Form.editors.Base.extend({
     else if (_.isFunction(options)) {
       var newOptions;
 
-        options(function (opts) {
-            newOptions = opts;
+      options(function(opts) {
+        newOptions = opts;
       }, this);
 
-        html = this._getOptionsHtml(newOptions);
+      html = this._getOptionsHtml(newOptions);
+
+    //Or any object
+    }else{
+      html=this._objectToHtml(options);
     }
 
     return html;
@@ -1710,6 +1715,25 @@ Form.editors.Select = Form.editors.Base.extend({
 
       return html;
   },
+  /**
+   * Transforms an object into HTML ready to use in the renderOptions method
+   * @param {Object} obj
+   * @return {String}
+   */
+  _objectToHtml: function(obj) {
+    //Convert object to array first
+    var array = [];
+    for(var key in obj){
+      if( obj.hasOwnProperty( key ) ) {
+        array.push({ val: key, label: obj[key] });
+      }
+    }
+
+    //Now convert to HTML
+    return this._arrayToHtml(array);
+  },
+
+
 
   /**
    * Create the <option> HTML
@@ -1842,6 +1866,8 @@ Form.editors.Checkboxes = Form.editors.Select.extend({
 
   tagName: 'ul',
 
+  groupNumber: 0,
+
   events: {
     'click input[type=checkbox]': function() {
       this.trigger('change', this);
@@ -1897,16 +1923,29 @@ Form.editors.Checkboxes = Form.editors.Select.extend({
 
     _.each(array, function(option, index) {
       var itemHtml = '<li>';
+			var close = true;
       if (_.isObject(option)) {
-        var val = (option.val || option.val === 0) ? option.val : '';
-        itemHtml += ('<input type="checkbox" name="'+self.getName()+'" value="'+val+'" id="'+self.id+'-'+index+'" />');
-        itemHtml += ('<label for="'+self.id+'-'+index+'">'+option.label+'</label>');
+        if (option.group) {
+          var originalId = self.id;
+          self.id += "-" + self.groupNumber++; 
+          itemHtml = ('<fieldset class="group"> <legend>'+option.group+'</legend>');
+          itemHtml += (self._arrayToHtml(option.options));
+          itemHtml += ('</fieldset>');
+          self.id = originalId;
+					close = false;
+        }else{
+          var val = (option.val || option.val === 0) ? option.val : '';
+          itemHtml += ('<input type="checkbox" name="'+self.getName()+'" value="'+val+'" id="'+self.id+'-'+index+'" />');
+          itemHtml += ('<label for="'+self.id+'-'+index+'">'+option.label+'</label>');
+        }
       }
       else {
         itemHtml += ('<input type="checkbox" name="'+self.getName()+'" value="'+option+'" id="'+self.id+'-'+index+'" />');
         itemHtml += ('<label for="'+self.id+'-'+index+'">'+option+'</label>');
       }
-      itemHtml += '</li>';
+			if(close){
+				itemHtml += '</li>';
+			}
       html.push(itemHtml);
     });
 
