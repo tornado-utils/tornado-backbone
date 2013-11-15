@@ -44,6 +44,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             if (event == "reset") {
                 this.$el.empty();
                 this.render({reset: true});
+                this.$el.trigger('tb.reset', [this.collection]);
             }
         },
 
