@@ -94,6 +94,11 @@ require(["jquery", "underscore", "backbone", "backbone-forms"],function ($, _, B
                 _.each(keys, function (key) {
                     var field = fields[key];
 
+                    if (!field) {
+                        console.error("Could not find " + key + " in fields for " + $form);
+                        return;
+                    }
+
                     field.schema = field.schema || {};
                     field.schema = _.extend(field.schema, $container.data("schema"));
 
