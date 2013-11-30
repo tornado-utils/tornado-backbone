@@ -142,8 +142,8 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
               <% if (page > 3) { %><a class="btn btn-page btn-page-number"><%= (page-2) %></a><% } %>\
               <% if (page > 2) { %><a class="btn btn-page btn-page-number"><%= (page-1) %></a><% } %>\
               <a class="btn btn-page btn-page-number btn-page-active"><%= page %></a>\
-              <% if (page < total_pages-1) { %><a class="btn btn-page btn-page-number"><%= (total_pages+1) %></a><% } %>\
-              <% if (page < total_pages-2) { %><a class="btn btn-page btn-page-number"><%= (total_pages+2) %></a><% } %>\
+              <% if (page < total_pages-1) { %><a class="btn btn-page btn-page-number"><%= (page+1) %></a><% } %>\
+              <% if (page < total_pages-2) { %><a class="btn btn-page btn-page-number"><%= (page+2) %></a><% } %>\
               <% if (page == total_pages-3) { %><a class="btn btn-page btn-page-number"><%= (total_pages-1) %></a><% } %>\
               <% if (page <= total_pages-4) { %><span class="btn btn-page btn-page-ellipses">...</span><% } %>\
               <% if (page < total_pages) { %><a class="btn btn-page btn-page-number"><%= (total_pages) %></a><% } %>\
