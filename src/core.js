@@ -183,7 +183,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
 
         // Objects on page
         page: 0,
-        page_length: 25,
+        page_length: null,
         num_results: null,
 
         /**
