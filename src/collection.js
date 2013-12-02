@@ -133,7 +133,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
         /* STATICS */
 
         footerTemplate: _.template('\
-            <footer>\
+            <footer class="pagination">\
               <a class="btn btn-page btn-fast-backward"><i class="glyphicon glyphicon-fast-backward"></i></a>\
               <a class="btn btn-page btn-step-backward"><i class="glyphicon glyphicon-step-backward"></i></a>\
               <% if (page > 1) { %><a class="btn btn-page btn-page-number">1</a><% } %>\
