@@ -24,7 +24,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             }
 
             // Create Template (@TODO there must be something better than unescaping the escaped < & > tags)
-            this.template = _.template(this.$el.html().replace(/&lt;/g, "<").replace(/&gt;/g, ">"));
+            this.template = _.template(this.$el.html().replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"));
             this.$el.empty();
 
             // Listen to model events
@@ -85,7 +85,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
                 if ($el.length == 0) {
                     $el = $("<div></div>");
                     $el.attr("name", model.id);
-                    self.$el.prepend($el);
+                    self.$el.append($el);
                 }
                 $el.html(self.template(model.attributes));
             });
