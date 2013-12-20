@@ -206,6 +206,8 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             }
             options.data["page"] = options.reset || !collection.page ? undefined : collection.page + 1;
 
+            this.trigger("tb.load", "fetch");
+
             return Backbone.Collection.prototype.fetch.call(collection, options);
         },
 
@@ -222,6 +224,8 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             } else {
                 this.trigger("tb.pagination", "complete");
             }
+
+            this.trigger("tb.load", "complete");
 
             return objects;
         }

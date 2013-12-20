@@ -30,10 +30,17 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             // Listen to model events
             this.listenTo(this.collection, 'all', this.handleEvent);
 
+            // And add the css
+            this.$el.addClass("tb-collection");
+
         },
 
         handleEvent: function (event) {
             var self = this;
+
+            if (event == "tb.load") {
+                this.$el.attr("data-tb-load", arguments[1]);
+            }
 
             if ((event == "hide" || event == "show") && arguments[1]) {
                 var model = arguments[1];
