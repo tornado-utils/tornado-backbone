@@ -214,11 +214,22 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
         // parse data from server
         // This is specific overwritten to work with flask-restless / tornado-restless
         parse: function (data) {
-            var objects = data.objects || data;
+            var objects = data && data.objects;
+            if (!objects) {
+                this.trigger("tb.pagination", "empty");
+                this.trigger("tb.load", "complete");
+
+                this.num_results = 0;
+                this.page = 0;
+                this.total_pages = 0;
+
+                return objects;
+            }
 
             this.num_results = data.num_results || data.length;
             this.page = data.page || 1;
             this.total_pages = data.total_pages || 0;
+
             if (this.num_results < this.models.length + objects.length) {
                 this.trigger("tb.pagination", "load");
             } else {
