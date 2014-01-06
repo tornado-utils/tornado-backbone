@@ -24,16 +24,23 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             }
 
             // Create Template (@TODO there must be something better than unescaping the escaped < & > tags)
-            this.template = _.template(this.$el.html().replace(/&lt;/g, "<").replace(/&gt;/g, ">"));
+            this.template = _.template(this.$el.html().replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"));
             this.$el.empty();
 
             // Listen to model events
             this.listenTo(this.collection, 'all', this.handleEvent);
 
+            // And add the css
+            this.$el.addClass("tb-collection");
+
         },
 
         handleEvent: function (event) {
             var self = this;
+
+            if (event == "tb.load") {
+                this.$el.attr("data-tb-load", arguments[1]);
+            }
 
             if ((event == "hide" || event == "show") && arguments[1]) {
                 var model = arguments[1];
@@ -85,7 +92,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
                 if ($el.length == 0) {
                     $el = $("<div></div>");
                     $el.attr("name", model.id);
-                    self.$el.prepend($el);
+                    self.$el.append($el);
                 }
                 $el.html(self.template(model.attributes));
             });
@@ -133,7 +140,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
         /* STATICS */
 
         footerTemplate: _.template('\
-            <footer>\
+            <footer class="pagination">\
               <a class="btn btn-page btn-fast-backward"><i class="glyphicon glyphicon-fast-backward"></i></a>\
               <a class="btn btn-page btn-step-backward"><i class="glyphicon glyphicon-step-backward"></i></a>\
               <% if (page > 1) { %><a class="btn btn-page btn-page-number">1</a><% } %>\
