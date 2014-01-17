@@ -32,7 +32,6 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
 
             // And add the css
             this.$el.addClass("tb-collection");
-
         },
 
         handleEvent: function (event) {
@@ -177,7 +176,11 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             if (!data) {
                 options["el"] = $this;
                 $this.data('tb.collection', (data = new Tornado.BackboneCollection(options)));
-                $this.data('tb.collection').render();
+                if (!options["delay"]) {
+                    $this.data('tb.collection').render();
+                } else {
+                    $this.data('tb.collection').handleEvent("tb.load", "delay");
+                }
             }
             if (typeof option == 'string') {
                 data[option].apply(data, args);
