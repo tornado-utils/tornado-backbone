@@ -291,6 +291,40 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
         },
 
         /**
+         * Apply a sorting
+         *
+         * filter: [list|object]: The filter
+         * [options]: update: Update an existing filter
+         *            nofetch: Do not fetch collection (useful for bulk updating)
+         */
+        sortBy: function (filter, options) {
+            var collection = this;
+
+            if (_.isArray(filter)) {
+                if (filter.length > 2) {
+                    filter = {'name': filter[0], 'op': filter[1]};
+                } else {
+                    filter = {'name': filter[0]};
+                }
+            } else if (_.isString(filter)) {
+                filter = {'name': arguments[0], 'op': arguments[1]};
+                options = arguments[2];
+            }
+
+            _.defaults(filter, {'op': 'asc'});
+
+            if (options.update) {
+                collection.filters = _.reject(collection.filters, function (f) {
+                    return f.op == "asc" || f.op == "desc";
+                });
+            }
+            collection.filters.push(filter);
+            if (!options.nofetch) {
+                collection.fetch({reset: true});
+            }
+        },
+
+        /**
          * Remove a filter
          *
          * filter: [list|object|string]: The filter
@@ -308,6 +342,21 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
                     return f == filter
                 });
             }
+            if (!options.nofetch) {
+                collection.fetch({reset: true});
+            }
+        },
+
+        /**
+         * Remove all sorting
+         * [options]: nofetch: Do not fetch collection (useful for bulk updating)
+         */
+        removeSort: function (options) {
+            var collection = this;
+
+            collection.filters = _.reject(collection.filters, function (f) {
+                return f.op == "asc" || f.op == "desc";
+            });
             if (!options.nofetch) {
                 collection.fetch({reset: true});
             }
