@@ -4,10 +4,10 @@
     "author": {
         "name": "Martin Martimeo"
     },
-    "version": "0.2.1",
+    "version": "0.2.2",
     "dependencies": {
         "backbone": ">=1.0.0",
-        "backbone-forms": ">=0.12.0",
+        "backbone-forms": ">=0.14.0",
         "backbone-relational": ">=0.8.5"
     },
     "devDependencies": {

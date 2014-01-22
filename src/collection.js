@@ -23,8 +23,12 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
                 }
             }
 
-            // Create Template (@TODO there must be something better than unescaping the escaped < & > tags)
-            this.template = _.template(this.$el.html().replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"));
+            // Create Template
+            if (this.options.template) {
+                this.template = _.template($(this.options.template).text());
+            } else {
+                this.template = _.template(this.$el.html().replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"));
+            }
             this.$el.empty();
 
             // Listen to model events

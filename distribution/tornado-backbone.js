@@ -183,7 +183,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
 
         // Objects on page
         page: 0,
-        page_length: 25,
+        page_length: null,
         num_results: null,
 
         /**
@@ -206,22 +206,37 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             }
             options.data["page"] = options.reset || !collection.page ? undefined : collection.page + 1;
 
+            this.trigger("tb.load", "fetch");
+
             return Backbone.Collection.prototype.fetch.call(collection, options);
         },
 
         // parse data from server
         // This is specific overwritten to work with flask-restless / tornado-restless
         parse: function (data) {
-            var objects = data.objects || data;
+            var objects = data && data.objects;
+            if (!objects) {
+                this.trigger("tb.pagination", "empty");
+                this.trigger("tb.load", "complete");
+
+                this.num_results = 0;
+                this.page = 0;
+                this.total_pages = 0;
+
+                return objects;
+            }
 
             this.num_results = data.num_results || data.length;
             this.page = data.page || 1;
             this.total_pages = data.total_pages || 0;
+
             if (this.num_results < this.models.length + objects.length) {
                 this.trigger("tb.pagination", "load");
             } else {
                 this.trigger("tb.pagination", "complete");
             }
+
+            this.trigger("tb.load", "complete");
 
             return objects;
         }
@@ -276,6 +291,40 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
         },
 
         /**
+         * Apply a sorting
+         *
+         * filter: [list|object]: The filter
+         * [options]: update: Update an existing filter
+         *            nofetch: Do not fetch collection (useful for bulk updating)
+         */
+        sortBy: function (filter, options) {
+            var collection = this;
+
+            if (_.isArray(filter)) {
+                if (filter.length > 2) {
+                    filter = {'name': filter[0], 'op': filter[1]};
+                } else {
+                    filter = {'name': filter[0]};
+                }
+            } else if (_.isString(filter)) {
+                filter = {'name': arguments[0], 'op': arguments[1]};
+                options = arguments[2];
+            }
+
+            _.defaults(filter, {'op': 'asc'});
+
+            if (options.update) {
+                collection.filters = _.reject(collection.filters, function (f) {
+                    return f.op == "asc" || f.op == "desc";
+                });
+            }
+            collection.filters.push(filter);
+            if (!options.nofetch) {
+                collection.fetch({reset: true});
+            }
+        },
+
+        /**
          * Remove a filter
          *
          * filter: [list|object|string]: The filter
@@ -293,6 +342,21 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
                     return f == filter
                 });
             }
+            if (!options.nofetch) {
+                collection.fetch({reset: true});
+            }
+        },
+
+        /**
+         * Remove all sorting
+         * [options]: nofetch: Do not fetch collection (useful for bulk updating)
+         */
+        removeSort: function (options) {
+            var collection = this;
+
+            collection.filters = _.reject(collection.filters, function (f) {
+                return f.op == "asc" || f.op == "desc";
+            });
             if (!options.nofetch) {
                 collection.fetch({reset: true});
             }
@@ -341,17 +405,27 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
                 }
             }
 
-            // Create Template (@TODO there must be something better than unescaping the escaped < & > tags)
-            this.template = _.template(this.$el.html().replace(/&lt;/g, "<").replace(/&gt;/g, ">"));
+            // Create Template
+            if (this.options.template) {
+                this.template = _.template($(this.options.template).text());
+            } else {
+                this.template = _.template(this.$el.html().replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"));
+            }
             this.$el.empty();
 
             // Listen to model events
             this.listenTo(this.collection, 'all', this.handleEvent);
 
+            // And add the css
+            this.$el.addClass("tb-collection");
         },
 
         handleEvent: function (event) {
             var self = this;
+
+            if (event == "tb.load") {
+                this.$el.attr("data-tb-load", arguments[1]);
+            }
 
             if ((event == "hide" || event == "show") && arguments[1]) {
                 var model = arguments[1];
@@ -362,6 +436,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             if (event == "reset") {
                 this.$el.empty();
                 this.render({reset: true});
+                this.$el.trigger('tb.reset', [this.collection]);
             }
         },
 
@@ -402,7 +477,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
                 if ($el.length == 0) {
                     $el = $("<div></div>");
                     $el.attr("name", model.id);
-                    self.$el.prepend($el);
+                    self.$el.append($el);
                 }
                 $el.html(self.template(model.attributes));
             });
@@ -450,7 +525,7 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
         /* STATICS */
 
         footerTemplate: _.template('\
-            <footer>\
+            <footer class="pagination">\
               <a class="btn btn-page btn-fast-backward"><i class="glyphicon glyphicon-fast-backward"></i></a>\
               <a class="btn btn-page btn-step-backward"><i class="glyphicon glyphicon-step-backward"></i></a>\
               <% if (page > 1) { %><a class="btn btn-page btn-page-number">1</a><% } %>\
@@ -459,8 +534,8 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
               <% if (page > 3) { %><a class="btn btn-page btn-page-number"><%= (page-2) %></a><% } %>\
               <% if (page > 2) { %><a class="btn btn-page btn-page-number"><%= (page-1) %></a><% } %>\
               <a class="btn btn-page btn-page-number btn-page-active"><%= page %></a>\
-              <% if (page < total_pages-1) { %><a class="btn btn-page btn-page-number"><%= (total_pages+1) %></a><% } %>\
-              <% if (page < total_pages-2) { %><a class="btn btn-page btn-page-number"><%= (total_pages+2) %></a><% } %>\
+              <% if (page < total_pages-1) { %><a class="btn btn-page btn-page-number"><%= (page+1) %></a><% } %>\
+              <% if (page < total_pages-2) { %><a class="btn btn-page btn-page-number"><%= (page+2) %></a><% } %>\
               <% if (page == total_pages-3) { %><a class="btn btn-page btn-page-number"><%= (total_pages-1) %></a><% } %>\
               <% if (page <= total_pages-4) { %><span class="btn btn-page btn-page-ellipses">...</span><% } %>\
               <% if (page < total_pages) { %><a class="btn btn-page btn-page-number"><%= (total_pages) %></a><% } %>\
@@ -487,7 +562,11 @@ require(["jquery", "underscore", "backbone"],function ($, _, Backbone) {
             if (!data) {
                 options["el"] = $this;
                 $this.data('tb.collection', (data = new Tornado.BackboneCollection(options)));
-                $this.data('tb.collection').render();
+                if (!options["delay"]) {
+                    $this.data('tb.collection').render();
+                } else {
+                    $this.data('tb.collection').handleEvent("tb.load", "delay");
+                }
             }
             if (typeof option == 'string') {
                 data[option].apply(data, args);
@@ -608,6 +687,11 @@ require(["jquery", "underscore", "backbone", "backbone-forms"],function ($, _, B
                 _.each(keys, function (key) {
                     var field = fields[key];
 
+                    if (!field) {
+                        console.error("Could not find " + key + " in fields for " + $form);
+                        return;
+                    }
+
                     field.schema = field.schema || {};
                     field.schema = _.extend(field.schema, $container.data("schema"));
 
@@ -710,23 +794,6 @@ require(["jquery", "underscore", "backbone", "backbone-forms"],function ($, _, B
         var $form = $(this);
         $form.tbform($form.data());
     });
-
-    return Tornado;
-}).call(window);
-
-/**
- * User: Martin Martimeo
- * Date: 17.08.13
- * Time: 17:32
- *
- * Extension to backbone_relations
- */
-
-require(["jquery", "underscore", "backbone", "backbone-relational"],function ($, _, Backbone, BackboneRelation) {
-    var self = this.Tornado || {};
-    var Tornado = this.Tornado = self;
-
-    Tornado.RelationalModel = Backbone.RelationalModel.extend(Tornado.Model);
 
     return Tornado;
 }).call(window);

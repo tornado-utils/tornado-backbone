@@ -4,13 +4,13 @@
 
 """
 __author__ = 'Martin Martimeo <martin@martimeo.de>'
-__date__ = '29.04.13 - 15:34'
+__date__ = '30.01.14 - 13:44'
 
 from distutils.core import setup
 
 setup(
     name='Tornado-Backbone',
-    version='0.2.1',
+    version='0.2.2',
     author='Martin Martimeo',
     author_email='martin@martimeo.de',
     url='https://github.com/MartinMartimeo/tornado-backbone',
